@@ -1,0 +1,2 @@
+CREATE DATABASE digital_document_approval;
+USE digital_document_approval;
