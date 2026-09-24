@@ -1,1 +1,90 @@
 <p>document works!</p>
+<div class="document-container">
+    
+  <div class="document-header">
+    <h1>Documents Management</h1>
+    <button class="btn-toggle-upload" (click)="showUploadForm = !showUploadForm">
+      {{ showUploadForm ? '❌ Stop' : '📤 New document apploaded' }}
+    </button>
+  </div>
+
+  <div class="upload-panel" *ngIf="showUploadForm">
+    <h3>New Documents aploaded form</h3>
+    
+    <form [formGroup]="uploadForm" (ngSubmit)="uploadDocument()">
+      
+      <div class="form-group">
+        <label for="title">Document title (Title)*</label>
+        <input 
+          type="text" 
+          id="title" 
+          formControlName="title" 
+          class="form-control" 
+          placeholder="Example.Aadhar card, Ofer later"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="file">Choise File (Only  PDF and  Word file)*</label>
+        <input 
+          type="file" 
+          id="file" 
+          (change)="onFileSelected($event)" 
+          class="form-control-file"
+          accept=".pdf,.doc,.docx"
+        />
+        <small class="file-help">Accepted formats: .pdf, .doc, .docx</small>
+      </div>
+
+    
+      <div class="form-actions">
+        <button type="submit" class="btn-submit" [disabled]="uploadForm.invalid || !selectedFile">
+          🚀 Upload
+        </button>
+        <button type="button" class="btn-cancel" (click)="showUploadForm = false">
+        Cancel
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <div class="table-responsive" *ngIf="documents.length > 0">
+    <table class="document-table">
+      <thead>
+        <tr>
+          <th>Title (Title)</th>
+          <th>status (Status)</th>
+          <th>action (Actions)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let doc of documents">
+          <td class="doc-title">{{ doc.title }}</td>
+          
+          <td>
+            <span class="badge" [ngClass]="getStatusClass(doc.status)">
+              {{ doc.status }}
+            </span>
+          </td>
+          
+          <td class="action-buttons">
+            <a [href]="doc.filePath" target="_blank" class="btn-action btn-download" title="Dounload">
+              📥 Dounload
+            </a>
+            <button (click)="deleteDocument(doc.id)" class="btn-action btn-delete" title="Delete">
+              🗑️ Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="empty-state" *ngIf="documents.length === 0">
+    <div class="empty-icon">📁</div>
+    <h3>No documents available!</h3>
+    <p>You haven't uploaded any file.click on the button given to add a new file</p>
+  </div>
+
+</div>

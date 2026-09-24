@@ -1,1 +1,83 @@
 <p>register works!</p>
+<div class="register-container">
+  <div class="register-card">
+    
+    <div class="register-header">
+      <h2>Create New Acount</h2>
+      <p>Fill in your information to use the portal</p>
+    </div>
+
+    <!-- Registration form  -->
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+      
+      <!-- १. Username input -->
+      <div class="form-group">
+        <label for="username">Username(Username)</label>
+        <input type="text" id="username" formControlName="username" class="form-control" placeholder="Enter your Name" />
+        <div *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.invalid" class="error-text">
+          <small *ngIf="registerForm.get('username')?.errors?.['required']">Username is required.</small>
+          <small *ngIf="registerForm.get('username')?.errors?.['minlength']">Username must be at list 3 characters.</small>
+        </div>
+      </div>
+
+      <!-- २. Email input-->
+      <div class="form-group">
+        <label for="email">Email Id</label>
+        <input type="email" id="email" formControlName="email" class="form-control" placeholder="example@mail.com" />
+        <div *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.invalid" class="error-text">
+          <small *ngIf="registerForm.get('email')?.errors?.['required']">Email is required.</small>
+          <small *ngIf="registerForm.get('email')?.errors?.['email']">Please enter a valid Email Id.</small>
+        </div>
+      </div>
+
+      <!-- ३. Department Dropdown -->
+      <div class="form-group">
+        <label for="departmentId"> (Department)</label>
+        <select id="departmentId" formControlName="departmentId" class="form-control">
+          <option value="">Chose the department</option>
+          <option *ngFor="let dept of departments" [value]="dept.id">
+            {{ dept.name }}
+          </option>
+        </select>
+        <div *ngIf="registerForm.get('departmentId')?.touched && registerForm.get('departmentId')?.invalid" class="error-text">
+          <small>Please chose the your department</small>
+        </div>
+      </div>
+
+      <!-- 4. Password input -->
+      <div class="form-group">
+        <label for="password">Passeord</label>
+        <input type="password" id="password" formControlName="password" class="form-control" placeholder="******" />
+        <div *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.invalid" class="error-text">
+          <small *ngIf="registerForm.get('password')?.errors?.['required']">Password is required</small>
+          <small *ngIf="registerForm.get('password')?.errors?.['minlength']">Password must be at least 6 digit</small>
+        </div>
+      </div>
+
+<!--5.-Conform password--->
+      <div class="form-group">
+        <label for="confirmPassword">(Confirm Password)</label>
+        <input type="password" id="confirmPassword" formControlName="confirmPassword" class="form-control" placeholder="******" />
+        <div *ngIf="registerForm.get('confirmPassword')?.touched && registerForm.get('confirmPassword')?.invalid" class="error-text">
+          <small>Conform password</small>
+        </div>
+      </div>
+
+      <div *ngIf="registerForm.errors?.['passwordMismatch'] && registerForm.get('confirmPassword')?.touched" class="alert-danger">
+        <p>do not match the pasword  please try again.</p>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert-danger"><p>{{ errorMessage }}</p></div>
+      <div *ngIf="successMessage" class="alert-success"><p>{{ successMessage }}</p></div>
+
+      <button type="submit" class="btn-submit" [disabled]="registerForm.invalid">
+        create acount
+      </button>
+
+      <div class="login-link">
+        <p>Already have an acount <a routerLink="/login">login</a></p>
+      </div>
+
+    </form>
+  </div>
+</div>

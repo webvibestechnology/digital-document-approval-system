@@ -63,8 +63,8 @@ package com.documentapproval.entity;
 	        return approver;
 	    }
 
-	    public void setApprover(User approver) {
-	        this.approver = approver;
+	    public void setApprover(User document2) {
+	        this.approver = document2;
 	    }
 
 	    public DocumentStatus getStatus() {
@@ -74,6 +74,11 @@ package com.documentapproval.entity;
 	    public void setStatus(DocumentStatus status) {
 	        this.status = status;
 	    }
+
+		public void setApprover(Document document2) {
+			// TODO Auto-generated method stub
+			
+		}
 	}
 
 

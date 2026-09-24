@@ -340,5 +340,13 @@
 <!-- * * * * * * * * * * End of Placeholder  * * * * * * * * * * * * -->
 <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
 
+<app-navbar></app-navbar>
 
+<div class="main-layout-container">
+  <app-sidebar></app-sidebar>
+  <main class="content-area">
+    <router-outlet></router-outlet>
+  </main>
+
+</div>
 <router-outlet />

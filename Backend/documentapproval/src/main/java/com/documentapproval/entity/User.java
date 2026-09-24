@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+
 @Entity
 @Table(name = "users") 
 @Data
@@ -47,7 +49,7 @@ public class User {
 		return email;
 	}
 
-	public void setEmail(String email) {
+	public void setEmail1(String email) {
 		this.email = email;
 	}
 
@@ -57,6 +59,26 @@ public class User {
 
 	public void setPassword(String password) {
 		this.password = password;
+	}
+
+	public void setEmail(String email2) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public Object getRoleName() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public void setRole(Role role2) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public AbstractAuthenticationToken getRole() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
 

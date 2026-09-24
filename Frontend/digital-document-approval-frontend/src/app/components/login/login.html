@@ -1,1 +1,66 @@
 <p>login works!</p>
+<div class="login-container">
+  <div class="login-card">
+    
+    <div class="login-header">
+      <img src="assets/logo.png" alt="App Logo" class="app-logo">
+      <h2>Document Approval Portal</h2>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      
+      <div class="form-group">
+        <label for="email">gujardivya982@gmail.com</label>
+        <input 
+          type="email" 
+          id="email" 
+          formControlName="email" 
+          placeholder="example@mail.com"
+          class="form-control"
+        />
+        <div *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid" class="field-error">
+          <small *ngIf="loginForm.get('email')?.errors?.['required']">ईमेल टाकणे आवश्यक आहे.</small>
+          <small *ngIf="loginForm.get('email')?.errors?.['email']">कृपया योग्य ईमेल आयडी टाका.</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">divyagujar12345</label>
+        <div class="password-wrapper">
+          <input 
+            [type]="hidePassword ? 'password' : 'text'" 
+            id="password" 
+            formControlName="password" 
+            placeholder="******"
+            class="form-control"
+          />
+          <button type="button" class="toggle-btn" (click)="hidePassword = !hidePassword">
+            {{ hidePassword ? '👁️' : '🔒' }}
+          </button>
+        </div>
+        <div *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid" class="field-error">
+          <small *ngIf="loginForm.get('password')?.errors?.['required']">पासवर्ड टाकणे आवश्यक आहे.</small>
+          <small *ngIf="loginForm.get('password')?.errors?.['minlength']">पासवर्ड कमीत कमी ६ अक्षरांचा हवा.</small>
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="alert-danger">
+        <p>{{ errorMessage }}</p>
+      </div>
+
+      <button 
+        type="submit" 
+        class="btn-submit" 
+        [disabled]="loginForm.invalid || isLoading"
+      >
+        {{ isLoading ? '...' : 'login' }}
+      </button>
+
+      <div class="register-link">
+        <p>Create Naw acount <a routerLink="/register">Register</a></p>
+      </div>
+
+    </form>
+  </div>
+</div>
+

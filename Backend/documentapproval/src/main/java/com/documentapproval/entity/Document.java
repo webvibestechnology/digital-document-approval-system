@@ -3,6 +3,9 @@ package com.documentapproval.entity;
 	import jakarta.persistence.*;
 	import java.time.LocalDateTime;
 
+import org.jspecify.annotations.Nullable;
+import org.springframework.web.multipart.MultipartFile;
+
 	@Entity
 	@Table(name = "documents")
 	public class Document {
@@ -116,6 +119,36 @@ package com.documentapproval.entity;
 	    public void setUpdatedAt(LocalDateTime updatedAt) {
 	        this.updatedAt = updatedAt;
 	    }
+
+		public MultipartFile getUser() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public void setUser(Document user) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public Document getDocument() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public String getEmail() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public @Nullable String getPassword() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+
+		public String getEmail1() {
+			// TODO Auto-generated method stub
+			return null;
+		}
 	}
 
 

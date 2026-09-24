@@ -1,1 +1,109 @@
 <p>dashboard works!</p>
+<div class="dashboard-container">
+  
+  <div class="dashboard-header">
+    <h1>Mean Dashboard (Dashboard)</h1>
+    <p>Live stastics and recent updates of the Document poetal</p>
+  </div>
+
+  <div class="stats-grid">
+    
+    <div class="stats-card">
+      <div class="stats-info">
+        <h3>Total Documents</h3>
+        <p class="stats-number">{{ totalDocuments }}</p>
+      </div>
+      <div class="stats-icon total-icon">📁</div>
+    </div>
+
+    <div class="stats-card">
+      <div class="stats-info">
+        <h3>Approval Pending</h3>
+        <p class="stats-number">{{ pendingDocuments }}</p>
+      </div>
+      <div class="stats-icon pending-icon">⏳</div>
+    </div>
+
+    <div class="stats-card">
+      <div class="stats-info">
+        <h3>Approval Approved</h3>
+        <p class="stats-number">{{ approvedDocuments }}</p>
+      </div>
+      <div class="stats-icon approved-icon">✅</div>
+    </div>
+
+    <div class="stats-card">
+      <div class="stats-info">
+        <h3>Approval Rejected</h3>
+        <p class="stats-number">{{ rejectedDocuments }}</p>
+      </div>
+      <div class="stats-icon rejected-icon">❌</div>
+    </div>
+
+  </div>
+
+  <div class="dashboard-sections">
+
+    <div class="data-section-card">
+      <h2>Recently Uploaded Documents</h2>
+      
+      <div *ngIf="recentDocuments.length === 0" class="no-data">
+        <p>No document are avalible.</p>
+      </div>
+
+      <table class="data-table" *ngIf="recentDocuments.length > 0">
+        <thead>
+          <tr>
+            <th>Title (Title)</th>
+            <th>Apload</th>
+            <th>Status(Status)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of recentDocuments">
+            <td>{{ doc.title }}</td>
+            <td>{{ doc.uploadedBy?.username || 'User' }}</td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'badge-pending': doc.status === 'PENDING',
+                'badge-approved': doc.status === 'APPROVED',
+                'badge-rejected': doc.status === 'REJECTED'
+              }">
+                {{ doc.status }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="data-section-card">
+      <h2>Files Pending for My Approval</h2>
+
+      <div *ngIf="pendingApprovals.length === 0" class="no-data">
+        <p>🎉 All files are approved.No files is pending.</p>
+      </div>
+
+      <table class="data-table" *ngIf="pendingApprovals.length > 0">
+        <thead>
+          <tr>
+            <th>Documents</th>
+            <th>Action(Action)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let approval of pendingApprovals">
+            <td>{{ approval.documentId?.title }}</td>
+            <td>
+              <button class="btn-action" [routerLink]="['/approvals/process', approval.id]">
+                Search 🔍
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div>

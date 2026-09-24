@@ -1,1 +1,22 @@
 <p>navbar works!</p>
+<nav class="navbar" *ngIf="authService.isLoggedIn()">
+  
+  <div class="navbar-left">
+    <img src="assets/logo.png" alt="Logo" class="nav-logo" />
+    <span class="nav-title">Document Approval</span>
+  </div>
+
+  <div class="navbar-right">
+    
+    <div class="notification-badge-wrapper" routerLink="/notifications">
+      <span class="bell-icon">🔔</span>
+      <span class="badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+    </div>
+
+    <span class="welcome-text">Hello, <strong>{{ username }}</strong></span>
+
+    <!-- लॉगआउट बटन -->
+    <button class="btn-logout" (click)="logout()">Logout</button>
+  </div>
+
+</nav>

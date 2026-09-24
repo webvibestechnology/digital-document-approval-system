@@ -1,5 +1,13 @@
 package com.documentapproval.dto;
 
-public class NotificationResponse {
+import lombok.Data;
 
+@Data
+public class NotificationResponse {
+public Long id;
+public String message;
+public Boolean isRead;
+public String createdAt;
 }
+
+
