@@ -12,7 +12,48 @@
 > - **Admins** can manage users, departments, and see reports
 > - **Everyone** gets notifications when something happens to their document
 >
-> **The project skeleton is already created for you.** Every file and folder exists, but every file is empty. Your job is to open each file, understand what it should do, and write the code inside it.
+> ### ✅ Progress Checkpoint — What Is Already Done
+>
+> The following files are **already fully implemented** (verified by code review):
+>
+> **Backend (Spring Boot):**
+> - All 7 Entity classes (`User`, `Role`, `Department`, `Document`, `Approval`, `Notification`, `DocumentStatus`)
+> - All 6 Repository interfaces
+> - All 9 DTO classes
+> - All 7 Security files (`JwtService`, `JwtAuthenticationFilter`, `CustomUserDetailsService`, `SecurityConfig`)
+> - All 3 Exception classes + `GlobalExceptionHandler`
+> - Both utility classes (`FileUploadUtil`, `ValidationUtil`)
+> - All 7 Service classes (`AuthService`, `UserService`, `DocumentService`, `ApprovalService`, `DepartmentService`, `NotificationService`, `ReportService`)
+> - All 8 Controller classes (`AuthController`, `UserController`, `DocumentController`, `ApprovalController`, `DepartmentController`, `NotificationController`, `AdminController`, `ReportController`)
+>
+> **Frontend (Angular):**
+> - All 4 TypeScript model interfaces
+> - All 5 Angular services (`AuthService`, `DocumentService`, `ApprovalService`, `NotificationService`, `UserService`)
+> - Both interceptors (`authInterceptor`, `errorInterceptor`)
+> - Both guards (`authGuard`, `adminGuard`)
+> - `app.routes.ts` — all routes defined
+> - `app.config.ts` — interceptors and router registered
+> - `app.ts` + `app.html` — layout with navbar, sidebar, router-outlet
+> - Login component — `.ts` and `.html` ✅
+> - Register component — `.ts` and `.html` ✅
+> - Dashboard component — `.ts` and `.html` ✅
+> - Document component — `.ts` and `.html` ✅
+> - Navbar component — `.ts` and `.html` ✅
+> - Sidebar component — `.ts` and `.html` ✅
+> - Approval component — `.ts` and `.html` ✅
+> - Notification component — `.ts` and `.html` ✅
+>
+> ### ⚠️ What Still Needs Work
+>
+> 1. **Backend compile errors** — Lombok is not generating getters/setters because `@Data` is on classes but Lombok annotation processing may not be configured in the IDE. All "cannot find symbol" errors (like `getEmail()`, `setTitle()`) are caused by this one issue.
+> 2. **`application.properties`** — Not created yet. Backend cannot start without it.
+> 3. **`Database/dbsql.sql`** — Only has `CREATE DATABASE` line. Tables not created yet.
+> 4. **`profile.html`** — Only contains a placeholder line, needs to be properly built.
+> 5. **CSS files** — All component CSS files are empty. App has no styling.
+> 6. **`role-guard.ts`** — File exists but not implemented.
+> 7. **Admin panel component** — Not yet created (no `components/admin/` folder exists).
+>
+> **Start from Day 1 of this plan and complete all tasks in order.**
 >
 > **Two parts to this project:**
 > - 📁 **Backend** → `Backend/documentapproval/` (Java, Spring Boot)
@@ -130,14 +171,170 @@ Frontend/digital-document-approval-frontend/src/app/
 
 ---
 
+---
+
+> ### 📌 How to Read This Plan
+> - **✅ DONE** — This task is already complete. Read it to understand what was built.
+> - **🔧 TODO** — This task needs to be done. Follow the instructions carefully.
+> - **⚠️ FIX** — This task has code already written but it has errors that need to be fixed.
+
+---
+
 # 📅 WEEK 1 — Environment Setup, Database & Entities (Days 1–6)
 
 ---
 
-## ✅ Day 1 — Set Up Your Development Environment & Create the Database
+## ⚠️ Day 1 — Set Up Your Development Environment & Create the Database
 
-**What you will achieve today:**
-By end of day, your backend and frontend should both start without errors, and the database tables should be created in MySQL.
+**Status: PARTIALLY DONE — `application.properties` missing, database tables not created**
+
+The backend application file (`DocumentapprovalApplication.java`) and frontend packages are set up. However two critical things are still missing that will stop everything from working.
+
+---
+
+### 🔧 Task 1 — Create `application.properties` (MUST DO — backend won't start without this)
+
+Create a new file at this exact path: `Backend/documentapproval/src/main/resources/application.properties`
+
+Add the following settings inside it:
+- **Database URL:** `spring.datasource.url=jdbc:mysql://localhost:3306/digital_document_approval`
+- **Database username:** `spring.datasource.username=root` (replace with your MySQL username)
+- **Database password:** `spring.datasource.password=YOUR_MYSQL_PASSWORD`
+- **Auto-create tables:** `spring.jpa.hibernate.ddl-auto=update` — Hibernate will auto-create/update tables from your entity classes
+- **Show SQL in console:** `spring.jpa.show-sql=true` — helpful for seeing what queries Hibernate runs
+- **MySQL dialect:** `spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect`
+- **Server port:** `server.port=8080`
+- **File upload folder:** `file.upload.dir=uploads/` — where uploaded documents will be saved
+- **JWT secret:** `jwt.secret=mySecretKeyForJWT1234567890abcdefghijklmno` — must be at least 32 characters
+- **JWT expiry:** `jwt.expiration=86400000` — 24 hours in milliseconds
+
+After creating this file, click Run in IntelliJ. The backend should start on port 8080. Check the console — you should see `Tomcat started on port(s): 8080`.
+
+---
+
+### 🔧 Task 2 — Create the Database Tables (MUST DO — app has no tables yet)
+
+Only the `CREATE DATABASE` line exists in `Database/dbsql.sql`. You need to add all 6 table definitions.
+
+Open `Database/dbsql.sql` and write the SQL to create all tables, then run it in MySQL Workbench:
+
+```sql
+CREATE DATABASE IF NOT EXISTS digital_document_approval;
+USE digital_document_approval;
+
+-- Table 1: Roles
+-- Stores the 3 user types: ADMIN, USER, APPROVER
+CREATE TABLE IF NOT EXISTS roles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+
+-- Table 2: Departments
+-- Groups of users e.g. HR, Finance, IT
+CREATE TABLE IF NOT EXISTS departments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255)
+);
+
+-- Table 3: Users
+-- Every person who uses the system
+-- role_id → which role (ADMIN/USER/APPROVER)
+-- department_id → which department they belong to
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role_id BIGINT,
+    department_id BIGINT,
+    created_at DATETIME,
+    FOREIGN KEY (role_id) REFERENCES roles(id),
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+
+-- Table 4: Documents
+-- Every uploaded document
+-- status: DRAFT, PENDING, APPROVED, REJECTED
+-- uploaded_by → who uploaded it (foreign key to users)
+CREATE TABLE IF NOT EXISTS documents (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    file_path VARCHAR(500),
+    file_type VARCHAR(50),
+    status VARCHAR(50) DEFAULT 'PENDING',
+    uploaded_by BIGINT,
+    created_at DATETIME,
+    updated_at DATETIME,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+);
+
+-- Table 5: Approvals
+-- Each time a document is reviewed, a row is added here
+-- document_id → which document was reviewed
+-- approver_id → who reviewed it
+CREATE TABLE IF NOT EXISTS approvals (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    document_id BIGINT,
+    approver_id BIGINT,
+    status VARCHAR(50),
+    comments TEXT,
+    action_date DATETIME,
+    FOREIGN KEY (document_id) REFERENCES documents(id),
+    FOREIGN KEY (approver_id) REFERENCES users(id)
+);
+
+-- Table 6: Notifications
+-- Each notification sent to a user
+-- is_read → has the user seen this?
+CREATE TABLE IF NOT EXISTS notifications (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT,
+    message TEXT,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at DATETIME,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Insert the 3 default roles (run once after creating tables)
+INSERT IGNORE INTO roles (name) VALUES ('ADMIN'), ('USER'), ('APPROVER');
+```
+
+After running this SQL, go to MySQL Workbench and verify:
+- 6 tables exist in the `digital_document_approval` database
+- The `roles` table has 3 rows (ADMIN, USER, APPROVER)
+
+---
+
+### 🔧 Task 3 — Fix the Lombok Compile Errors (CRITICAL — backend won't compile without this)
+
+When you try to run the backend you will see many errors like:
+- `cannot find symbol: method getEmail()`
+- `cannot find symbol: method setTitle()`
+- `variable userRepository not initialized in the default constructor`
+
+**Root cause:** These methods are generated by Lombok (`@Data` annotation), but IntelliJ needs Lombok annotation processing enabled to use them.
+
+**How to fix in IntelliJ IDEA:**
+1. Go to **File → Settings** (or `Ctrl + Alt + S`)
+2. Navigate to **Build, Execution, Deployment → Compiler → Annotation Processors**
+3. Check the checkbox: **"Enable annotation processing"**
+4. Click **OK**
+5. Go to **Build → Rebuild Project**
+6. The errors should disappear
+
+**Also verify the Lombok plugin is installed:**
+1. Go to **File → Settings → Plugins**
+2. Search for "Lombok"
+3. If not installed, install it and restart IntelliJ
+
+**✅ Done when:** The project builds without errors and the backend starts on port 8080.
+
+**📂 Files worked on today:**
+- `Backend/.../src/main/resources/application.properties` ← CREATE NEW
+- `Database/dbsql.sql` ← ADD TABLE SQL
+- IntelliJ settings (enable annotation processing)
 
 ---
 
@@ -268,9 +465,26 @@ INSERT INTO roles (name) VALUES ('ADMIN'), ('USER'), ('APPROVER');
 
 ---
 
-## ✅ Day 2 — Entity Classes: User, Role, Department
+## ✅ Day 2 — Entity Classes: User, Role, Department — DONE
 
-### 🧠 What is a JPA Entity?
+**Status: COMPLETE — All 3 entity files are fully implemented.**
+
+Open and read these files to understand what was built. You do not need to write any code today for these files, but make sure you understand what each annotation does — you will be tested on this.
+
+- `entity/Role.java` — Maps to the `roles` table. Has `id` and `name` fields. Uses `@Entity`, `@Table`, `@Data`, `@Id`, `@GeneratedValue`.
+- `entity/Department.java` — Maps to the `departments` table. Has `id`, `name`, `description`.
+- `entity/User.java` — Maps to the `users` table. Has `id`, `username`, `email`, `password`, relationships to `Role` and `Department` using `@ManyToOne` and `@JoinColumn`, and `createdAt`.
+
+**What you should understand after reading these files:**
+- Why `@ManyToOne` is used on the `role` field (many users → one role)
+- What `@JoinColumn(name = "role_id")` does — it defines which column in the `users` table holds the foreign key
+- Why `@Data` is needed — it generates all getters and setters automatically via Lombok
+- Why `@GeneratedValue(strategy = GenerationType.IDENTITY)` is on the `id` field
+
+**📂 Files to READ today (no changes needed):**
+- `entity/Role.java`
+- `entity/Department.java`
+- `entity/User.java`
 
 A JPA Entity is a regular Java class that Hibernate (the ORM library) automatically maps to a database table.
 

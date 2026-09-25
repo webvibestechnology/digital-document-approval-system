@@ -1,1 +1,15 @@
-<p>navbar works!</p>
+<nav class="navbar">
+  <div class="navbar-brand">
+    <div class="brand-icon">📄</div>
+    <h3>DocApproval</h3>
+  </div>
+  <div class="navbar-right">
+    <div class="welcome-chip" *ngIf="username">
+      <div class="avatar-sm">{{ username[0]?.toUpperCase() }}</div>
+      <span>{{ username }}</span>
+    </div>
+    <button (click)="logout()" class="btn-logout">
+      <span>⎋</span> Logout
+    </button>
+  </div>
+</nav>

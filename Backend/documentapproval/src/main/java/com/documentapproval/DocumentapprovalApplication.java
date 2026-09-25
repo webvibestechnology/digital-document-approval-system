@@ -9,5 +9,4 @@ public class DocumentapprovalApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(DocumentapprovalApplication.class, args);
 	}
-
 }

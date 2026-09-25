@@ -1,1 +1,31 @@
-<p>notification works!</p>
+<div class="page-header">
+  <h2>🔔 Notifications
+    <span *ngIf="unreadCount > 0" class="unread-badge">{{ unreadCount }}</span>
+  </h2>
+  <button (click)="markAllRead()" [disabled]="unreadCount === 0" class="btn btn-secondary">
+    ✓ Mark All Read
+  </button>
+</div>
+
+<div *ngIf="isLoading" class="loading">⏳ Loading notifications...</div>
+
+<div *ngIf="!isLoading && notifications.length === 0" class="empty-state">
+  <div class="empty-icon">🔔</div>
+  <p>You're all caught up! No notifications.</p>
+</div>
+
+<div *ngIf="!isLoading && notifications.length > 0" class="notification-list">
+  <div *ngFor="let n of notifications"
+       class="notification-item"
+       [class.unread]="!n.isRead">
+    <div class="notif-dot" [class.active]="!n.isRead"></div>
+    <div class="notif-body">
+      <p class="notif-message">{{ n.message }}</p>
+      <small class="notif-time">{{ (n.createdAt | slice:0:16)?.replace('T', ' ') }}</small>
+    </div>
+    <button *ngIf="!n.isRead" (click)="markRead(n.id)"
+            class="btn btn-outline btn-small">
+      Mark read
+    </button>
+  </div>
+</div>

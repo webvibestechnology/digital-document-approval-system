@@ -1,1 +1,88 @@
-<p>document works!</p>
+<div class="page-header">
+  <h2>📄 Documents</h2>
+  <button (click)="showUploadForm = !showUploadForm" class="btn btn-primary">
+    {{ showUploadForm ? '✕ Cancel' : '+ Upload Document' }}
+  </button>
+</div>
+
+<div *ngIf="showUploadForm" class="card upload-card">
+  <h3 class="section-title">Upload New Document</h3>
+
+  <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Title <span class="required">*</span></label>
+      <input type="text" [(ngModel)]="title" placeholder="Document title" required>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <input type="text" [(ngModel)]="description" placeholder="Brief description">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label>File <span class="required">*</span></label>
+    <div class="file-drop" (click)="fileInput.click()">
+      <input #fileInput type="file" (change)="onFileSelected($event)"
+             accept=".pdf,.doc,.docx,.xlsx" style="display:none">
+      <div *ngIf="!selectedFile">
+        <div class="drop-icon">📎</div>
+        <p>Click to select a file</p>
+        <small>PDF, DOC, DOCX, XLSX</small>
+      </div>
+      <div *ngIf="selectedFile" class="file-selected">
+        <span class="file-icon">📄</span>
+        <span>{{ selectedFile.name }}</span>
+      </div>
+    </div>
+  </div>
+
+  <button (click)="upload()" [disabled]="isUploading || !title || !selectedFile"
+          class="btn btn-primary">
+    {{ isUploading ? '⏳ Uploading...' : '⬆ Upload Document' }}
+  </button>
+</div>
+
+<div *ngIf="!showUploadForm">
+  <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+</div>
+
+<div *ngIf="isLoading" class="loading">⏳ Loading documents...</div>
+
+<div *ngIf="!isLoading && documents.length === 0" class="empty-state">
+  <div class="empty-icon">📂</div>
+  <p>No documents yet. Upload your first document to get started!</p>
+</div>
+
+<div *ngIf="!isLoading && documents.length > 0" class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Status</th>
+        <th>Uploaded By</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let doc of documents">
+        <td><strong>{{ doc.title }}</strong></td>
+        <td style="color:#6b7280; max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+          {{ doc.description || '—' }}
+        </td>
+        <td><span [class]="'badge ' + doc.status.toLowerCase()">{{ doc.status }}</span></td>
+        <td style="color:#6b7280;">{{ doc.uploadedByUsername }}</td>
+        <td style="color:#6b7280; font-size:.8rem;">{{ doc.createdAt | slice:0:10 }}</td>
+        <td>
+          <button (click)="downloadDocument(doc.id)" class="btn btn-outline btn-small">⬇ Download</button>
+          <button (click)="deleteDocument(doc.id)" class="btn btn-danger btn-small" style="margin-left:6px;">🗑 Delete</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
