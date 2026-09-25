@@ -1,0 +1,73 @@
+.unread-badge {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 12px;
+  margin-left: 10px;
+  vertical-align: middle;
+  box-shadow: 0 2px 6px rgba(239,68,68,.35);
+  animation: pulseBadge 2s infinite;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { box-shadow: 0 2px 6px rgba(239,68,68,.35); }
+  50%       { box-shadow: 0 2px 12px rgba(239,68,68,.55); }
+}
+
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 20px;
+  transition: all 0.2s;
+  cursor: default;
+}
+
+.notification-item.unread {
+  border-left: 4px solid #4f46e5;
+  background: linear-gradient(135deg, #fafbff, #f5f3ff);
+  box-shadow: 0 2px 8px rgba(79,70,229,.06);
+}
+
+.notification-item:hover {
+  box-shadow: 0 4px 14px rgba(0,0,0,.07);
+  transform: translateY(-1px);
+}
+
+.notif-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+.notif-dot.active {
+  background: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79,70,229,.20);
+}
+
+.notif-body { flex: 1; min-width: 0; }
+.notif-message {
+  font-size: 0.9rem;
+  color: #0f172a;
+  font-weight: 500;
+  margin-bottom: 4px;
+  line-height: 1.45;
+}
+.notif-time {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 400;
+}

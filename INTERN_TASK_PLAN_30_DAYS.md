@@ -1,1334 +1,2670 @@
-# 📋 Intern Task Plan — Digital Document Approval System
-### Duration: 30 Days | Stack: Spring Boot · Hibernate · Angular · MySQL
-
-> **Project Overview:** A full-stack web application where users can upload documents, route them through an approval workflow, and track their status in real time.
->
-> **Current State:** The project skeleton is fully scaffolded — all files and folders exist but every class/component is empty. The intern's job is to implement everything from scratch following the existing structure.
->
-> **Tech Stack:**
-> - **Backend:** Spring Boot 4.1.1, Spring Data JPA (Hibernate), Spring Security (JWT), Lombok, Java 17
-> - **Frontend:** Angular (standalone components), TypeScript, RxJS
-> - **Database:** MySQL (`digital_document_approval` schema)
+# 🗓️ Intern Task Plan — 30 Days
+## Project: Digital Document Approval System
+### Technologies: Spring Boot | Hibernate | Angular | MySQL
 
 ---
 
-## 🗂️ Project File Map (Quick Reference)
+> ### 👋 Hey Intern! Read This First
+>
+> This project is a **web application** where:
+> - **Regular users** can upload documents (PDF, Word files, etc.)
+> - **Approvers** can review those documents and approve or reject them
+> - **Admins** can manage users, departments, and see reports
+> - **Everyone** gets notifications when something happens to their document
+>
+> ### ✅ Progress Checkpoint — What Is Already Done
+>
+> The following files are **already fully implemented** (verified by code review):
+>
+> **Backend (Spring Boot):**
+> - All 7 Entity classes (`User`, `Role`, `Department`, `Document`, `Approval`, `Notification`, `DocumentStatus`)
+> - All 6 Repository interfaces
+> - All 9 DTO classes
+> - All 7 Security files (`JwtService`, `JwtAuthenticationFilter`, `CustomUserDetailsService`, `SecurityConfig`)
+> - All 3 Exception classes + `GlobalExceptionHandler`
+> - Both utility classes (`FileUploadUtil`, `ValidationUtil`)
+> - All 7 Service classes (`AuthService`, `UserService`, `DocumentService`, `ApprovalService`, `DepartmentService`, `NotificationService`, `ReportService`)
+> - All 8 Controller classes (`AuthController`, `UserController`, `DocumentController`, `ApprovalController`, `DepartmentController`, `NotificationController`, `AdminController`, `ReportController`)
+>
+> **Frontend (Angular):**
+> - All 4 TypeScript model interfaces
+> - All 5 Angular services (`AuthService`, `DocumentService`, `ApprovalService`, `NotificationService`, `UserService`)
+> - Both interceptors (`authInterceptor`, `errorInterceptor`)
+> - Both guards (`authGuard`, `adminGuard`)
+> - `app.routes.ts` — all routes defined
+> - `app.config.ts` — interceptors and router registered
+> - `app.ts` + `app.html` — layout with navbar, sidebar, router-outlet
+> - Login component — `.ts` and `.html` ✅
+> - Register component — `.ts` and `.html` ✅
+> - Dashboard component — `.ts` and `.html` ✅
+> - Document component — `.ts` and `.html` ✅
+> - Navbar component — `.ts` and `.html` ✅
+> - Sidebar component — `.ts` and `.html` ✅
+> - Approval component — `.ts` and `.html` ✅
+> - Notification component — `.ts` and `.html` ✅
+>
+> ### ⚠️ What Still Needs Work
+>
+> 1. **Backend compile errors** — Lombok is not generating getters/setters because `@Data` is on classes but Lombok annotation processing may not be configured in the IDE. All "cannot find symbol" errors (like `getEmail()`, `setTitle()`) are caused by this one issue.
+> 2. **`application.properties`** — Not created yet. Backend cannot start without it.
+> 3. **`Database/dbsql.sql`** — Only has `CREATE DATABASE` line. Tables not created yet.
+> 4. **`profile.html`** — Only contains a placeholder line, needs to be properly built.
+> 5. **CSS files** — All component CSS files are empty. App has no styling.
+> 6. **`role-guard.ts`** — File exists but not implemented.
+> 7. **Admin panel component** — Not yet created (no `components/admin/` folder exists).
+>
+> **Start from Day 1 of this plan and complete all tasks in order.**
+>
+> **Two parts to this project:**
+> - 📁 **Backend** → `Backend/documentapproval/` (Java, Spring Boot)
+> - 📁 **Frontend** → `Frontend/digital-document-approval-frontend/` (TypeScript, Angular)
+> - 🗄️ **Database** → `Database/dbsql.sql` (MySQL)
+>
+> **How the two parts talk to each other:**
+> Angular (frontend) sends HTTP requests → Spring Boot (backend) handles them → backend reads/writes to MySQL → backend sends response back to Angular
+
+---
+
+## 📁 Complete File Map — Know Where Everything Is
 
 ```
 Backend/documentapproval/src/main/java/com/documentapproval/
-├── entity/             → JPA entities (DB table mappings)
-│   ├── User.java
-│   ├── Role.java
-│   ├── Department.java
-│   ├── Document.java
-│   ├── Approval.java
-│   └── Notification.java
-├── repository/         → Spring Data JPA interfaces
+│
+├── entity/                      ← Java classes that map to database tables
+│   ├── User.java                  (maps to 'users' table)
+│   ├── Role.java                  (maps to 'roles' table)
+│   ├── Department.java            (maps to 'departments' table)
+│   ├── Document.java              (maps to 'documents' table)
+│   ├── Approval.java              (maps to 'approvals' table)
+│   ├── Notification.java          (maps to 'notifications' table)
+│   └── DocumentStatus.java        (enum: DRAFT, PENDING, APPROVED, REJECTED)
+│
+├── repository/                  ← Interfaces for database operations
 │   ├── UserRepository.java
 │   ├── DocumentRepository.java
 │   ├── ApprovalRepository.java
 │   ├── DepartmentRepository.java
 │   └── NotificationRepository.java
-├── dto/                → Request/Response data transfer objects
-│   ├── LoginRequest.java, RegisterRequest.java
-│   ├── DocumentRequest.java, DocumentResponse.java
-│   ├── ApprovalRequest.java
-│   ├── DepartmentRequest.java
-│   ├── UserRequest.java, UserResponse.java
-│   └── NotificationResponse.java
-├── services/           → Business logic layer
-│   ├── AuthService.java
-│   ├── UserService.java
-│   ├── DocumentService.java
-│   ├── ApprovalService.java
-│   ├── DepartmentService.java
-│   ├── NotificationService.java
-│   └── ReportService.java
-├── controller/         → REST API endpoints
-│   ├── AuthController.java
-│   ├── UserController.java
-│   ├── DocumentController.java
-│   ├── ApprovalController.java
-│   ├── DepartmentController.java
-│   ├── NotificationController.java
-│   ├── AdminController.java
-│   └── ReportController.java
-├── security/           → JWT security layer
-│   ├── JwtService.java
-│   ├── JwtAuthenticationFilter.java
-│   └── CustomUserDetailsService.java
-├── exception/          → Error handling
-│   ├── GlobalExceptionHandler.java
+│
+├── dto/                         ← Simple data classes (no logic)
+│   ├── LoginRequest.java          (data received when user logs in)
+│   ├── RegisterRequest.java       (data received when user registers)
+│   ├── DocumentRequest.java       (data received when uploading document)
+│   ├── DocumentResponse.java      (data sent back when returning document info)
+│   ├── ApprovalRequest.java       (data received when approving/rejecting)
+│   ├── DepartmentRequest.java     (data received when creating department)
+│   ├── UserRequest.java           (data received when updating user)
+│   ├── UserResponse.java          (data sent back when returning user info)
+│   └── NotificationResponse.java  (data sent back for notifications)
+│
+├── services/                    ← Business logic (the "brain" of the app)
+│   ├── AuthService.java           (handles register and login)
+│   ├── UserService.java           (handles user operations)
+│   ├── DocumentService.java       (handles document upload/fetch/delete)
+│   ├── ApprovalService.java       (handles approve/reject logic)
+│   ├── DepartmentService.java     (handles department CRUD)
+│   ├── NotificationService.java   (handles creating and reading notifications)
+│   └── ReportService.java         (handles statistics/reports)
+│
+├── controller/                  ← REST API endpoints (URLs the frontend calls)
+│   ├── AuthController.java        (URLs: /api/auth/register, /api/auth/login)
+│   ├── UserController.java        (URLs: /api/users/...)
+│   ├── DocumentController.java    (URLs: /api/documents/...)
+│   ├── ApprovalController.java    (URLs: /api/approvals/...)
+│   ├── DepartmentController.java  (URLs: /api/departments/...)
+│   ├── NotificationController.java(URLs: /api/notifications/...)
+│   ├── AdminController.java       (URLs: /api/admin/...)
+│   └── ReportController.java      (URLs: /api/reports/...)
+│
+├── security/                    ← JWT token and authentication code
+│   ├── JwtService.java            (creates and reads JWT tokens)
+│   ├── JwtAuthenticationFilter.java (checks token on every request)
+│   └── CustomUserDetailsService.java (loads user from DB for Spring Security)
+│
+├── exception/                   ← Error handling
 │   ├── ResourceNotFoundException.java
-│   └── BadRequestException.java
-├── util/               → Utility classes
-│   ├── FileUploadUtil.java
-│   └── ValidationUtil.java
-└── config/             → Spring configuration (SecurityConfig to be created here)
-
-Database/
-└── dbsql.sql           → Add all CREATE TABLE statements here
+│   ├── BadRequestException.java
+│   └── GlobalExceptionHandler.java
+│
+├── config/                      ← Spring Security configuration
+│   └── SecurityConfig.java        (CREATE THIS FILE — it doesn't exist yet)
+│
+└── util/                        ← Helper utilities
+    ├── FileUploadUtil.java        (saves files to disk)
+    └── ValidationUtil.java        (validates email format, etc.)
 
 Frontend/digital-document-approval-frontend/src/app/
-├── models/             → TypeScript interfaces
-│   ├── user.ts, document.ts, approval.ts, notification.ts
-├── services/           → Angular HTTP services
-│   ├── auth.ts, user.ts, document.ts, approval.ts, notification.ts
-├── interceptors/       → HTTP interceptors
-│   ├── auth-interceptor.ts
-│   └── error-interceptor.ts
-├── guards/             → Route guards
-│   ├── auth-guard.ts, admin-guard.ts, role-guard.ts
-└── components/         → UI components
-    ├── login/, register/, dashboard/, document/
-    ├── approval/, notification/, profile/
-    ├── navbar/, sidebar/
+│
+├── models/                      ← TypeScript interfaces (data shapes)
+│   ├── user.ts
+│   ├── document.ts
+│   ├── approval.ts
+│   └── notification.ts
+│
+├── services/                    ← Angular services (HTTP calls to backend)
+│   ├── auth.ts                    (login, register, token management)
+│   ├── document.ts                (upload, get, delete documents)
+│   ├── approval.ts                (submit, process approvals)
+│   ├── notification.ts            (get, mark read)
+│   └── user.ts                    (get users)
+│
+├── interceptors/                ← Auto-process every HTTP request/response
+│   ├── auth-interceptor.ts        (adds token to every outgoing request)
+│   └── error-interceptor.ts       (handles error responses globally)
+│
+├── guards/                      ← Protect routes from unauthorized access
+│   ├── auth-guard.ts              (blocks pages if not logged in)
+│   ├── admin-guard.ts             (blocks pages if not admin)
+│   └── role-guard.ts              (blocks pages based on role)
+│
+└── components/                  ← UI pages and components
+    ├── login/                     (login page)
+    ├── register/                  (register page)
+    ├── dashboard/                 (home page after login)
+    ├── document/                  (document upload and list)
+    ├── approval/                  (pending approvals for approvers)
+    ├── notification/              (notification list)
+    ├── profile/                   (user profile)
+    ├── navbar/                    (top navigation bar)
+    └── sidebar/                   (left side navigation links)
 ```
 
 ---
 
-## Week 1 — Foundation: Database, Entities & Project Setup (Days 1–6)
+---
+
+> ### 📌 How to Read This Plan
+> - **✅ DONE** — This task is already complete. Read it to understand what was built.
+> - **🔧 TODO** — This task needs to be done. Follow the instructions carefully.
+> - **⚠️ FIX** — This task has code already written but it has errors that need to be fixed.
 
 ---
 
-### ✅ Day 1 — Environment Setup & Database Schema Design
+# 📅 WEEK 1 — Environment Setup, Database & Entities (Days 1–6)
 
-**Goal:** Get the development environment running and design the full database schema.
+---
 
-**Tasks:**
+## ⚠️ Day 1 — Set Up Your Development Environment & Create the Database
 
-1. **Set up the backend**
-   - Open `Backend/documentapproval/` in IntelliJ or VS Code
-   - Create `src/main/resources/application.properties` with MySQL connection:
-     ```properties
-     spring.datasource.url=jdbc:mysql://localhost:3306/digital_document_approval
-     spring.datasource.username=root
-     spring.datasource.password=yourpassword
-     spring.jpa.hibernate.ddl-auto=update
-     spring.jpa.show-sql=true
-     spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect
-     ```
-   - Verify `DocumentapprovalApplication.java` has the `@SpringBootApplication` annotation and `main()` method. Add it if missing.
+**Status: PARTIALLY DONE — `application.properties` missing, database tables not created**
 
-2. **Set up the frontend**
-   - Open terminal in `Frontend/digital-document-approval-frontend/`
-   - Run `npm install` to restore packages
-   - Run `ng serve` to verify the Angular app starts on `http://localhost:4200`
+The backend application file (`DocumentapprovalApplication.java`) and frontend packages are set up. However two critical things are still missing that will stop everything from working.
 
-3. **Design the database schema in `Database/dbsql.sql`**
-   - Write `CREATE TABLE` statements for all 6 tables:
-     - `roles` (id, name)
-     - `departments` (id, name, description)
-     - `users` (id, username, email, password, role_id FK, department_id FK, created_at)
-     - `documents` (id, title, description, file_path, file_type, status [PENDING/APPROVED/REJECTED/DRAFT], uploaded_by FK, created_at, updated_at)
-     - `approvals` (id, document_id FK, approver_id FK, status [PENDING/APPROVED/REJECTED], comments, action_date)
-     - `notifications` (id, user_id FK, message, is_read, created_at)
-   - Run the SQL script against your local MySQL to create the database
+---
 
-**Files to work on:**
-- `Backend/documentapproval/src/main/resources/application.properties` *(create this file)*
-- `Backend/documentapproval/src/main/java/com/documentapproval/DocumentapprovalApplication.java`
+### 🔧 Task 1 — Create `application.properties` (MUST DO — backend won't start without this)
+
+Create a new file at this exact path: `Backend/documentapproval/src/main/resources/application.properties`
+
+Add the following settings inside it:
+- **Database URL:** `spring.datasource.url=jdbc:mysql://localhost:3306/digital_document_approval`
+- **Database username:** `spring.datasource.username=root` (replace with your MySQL username)
+- **Database password:** `spring.datasource.password=YOUR_MYSQL_PASSWORD`
+- **Auto-create tables:** `spring.jpa.hibernate.ddl-auto=update` — Hibernate will auto-create/update tables from your entity classes
+- **Show SQL in console:** `spring.jpa.show-sql=true` — helpful for seeing what queries Hibernate runs
+- **MySQL dialect:** `spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect`
+- **Server port:** `server.port=8080`
+- **File upload folder:** `file.upload.dir=uploads/` — where uploaded documents will be saved
+- **JWT secret:** `jwt.secret=mySecretKeyForJWT1234567890abcdefghijklmno` — must be at least 32 characters
+- **JWT expiry:** `jwt.expiration=86400000` — 24 hours in milliseconds
+
+After creating this file, click Run in IntelliJ. The backend should start on port 8080. Check the console — you should see `Tomcat started on port(s): 8080`.
+
+---
+
+### 🔧 Task 2 — Create the Database Tables (MUST DO — app has no tables yet)
+
+Only the `CREATE DATABASE` line exists in `Database/dbsql.sql`. You need to add all 6 table definitions.
+
+Open `Database/dbsql.sql` and write the SQL to create all tables, then run it in MySQL Workbench:
+
+```sql
+CREATE DATABASE IF NOT EXISTS digital_document_approval;
+USE digital_document_approval;
+
+-- Table 1: Roles
+-- Stores the 3 user types: ADMIN, USER, APPROVER
+CREATE TABLE IF NOT EXISTS roles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+
+-- Table 2: Departments
+-- Groups of users e.g. HR, Finance, IT
+CREATE TABLE IF NOT EXISTS departments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255)
+);
+
+-- Table 3: Users
+-- Every person who uses the system
+-- role_id → which role (ADMIN/USER/APPROVER)
+-- department_id → which department they belong to
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role_id BIGINT,
+    department_id BIGINT,
+    created_at DATETIME,
+    FOREIGN KEY (role_id) REFERENCES roles(id),
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+
+-- Table 4: Documents
+-- Every uploaded document
+-- status: DRAFT, PENDING, APPROVED, REJECTED
+-- uploaded_by → who uploaded it (foreign key to users)
+CREATE TABLE IF NOT EXISTS documents (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    file_path VARCHAR(500),
+    file_type VARCHAR(50),
+    status VARCHAR(50) DEFAULT 'PENDING',
+    uploaded_by BIGINT,
+    created_at DATETIME,
+    updated_at DATETIME,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+);
+
+-- Table 5: Approvals
+-- Each time a document is reviewed, a row is added here
+-- document_id → which document was reviewed
+-- approver_id → who reviewed it
+CREATE TABLE IF NOT EXISTS approvals (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    document_id BIGINT,
+    approver_id BIGINT,
+    status VARCHAR(50),
+    comments TEXT,
+    action_date DATETIME,
+    FOREIGN KEY (document_id) REFERENCES documents(id),
+    FOREIGN KEY (approver_id) REFERENCES users(id)
+);
+
+-- Table 6: Notifications
+-- Each notification sent to a user
+-- is_read → has the user seen this?
+CREATE TABLE IF NOT EXISTS notifications (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT,
+    message TEXT,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at DATETIME,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Insert the 3 default roles (run once after creating tables)
+INSERT IGNORE INTO roles (name) VALUES ('ADMIN'), ('USER'), ('APPROVER');
+```
+
+After running this SQL, go to MySQL Workbench and verify:
+- 6 tables exist in the `digital_document_approval` database
+- The `roles` table has 3 rows (ADMIN, USER, APPROVER)
+
+---
+
+### 🔧 Task 3 — Fix the Lombok Compile Errors (CRITICAL — backend won't compile without this)
+
+When you try to run the backend you will see many errors like:
+- `cannot find symbol: method getEmail()`
+- `cannot find symbol: method setTitle()`
+- `variable userRepository not initialized in the default constructor`
+
+**Root cause:** These methods are generated by Lombok (`@Data` annotation), but IntelliJ needs Lombok annotation processing enabled to use them.
+
+**How to fix in IntelliJ IDEA:**
+1. Go to **File → Settings** (or `Ctrl + Alt + S`)
+2. Navigate to **Build, Execution, Deployment → Compiler → Annotation Processors**
+3. Check the checkbox: **"Enable annotation processing"**
+4. Click **OK**
+5. Go to **Build → Rebuild Project**
+6. The errors should disappear
+
+**Also verify the Lombok plugin is installed:**
+1. Go to **File → Settings → Plugins**
+2. Search for "Lombok"
+3. If not installed, install it and restart IntelliJ
+
+**✅ Done when:** The project builds without errors and the backend starts on port 8080.
+
+**📂 Files worked on today:**
+- `Backend/.../src/main/resources/application.properties` ← CREATE NEW
+- `Database/dbsql.sql` ← ADD TABLE SQL
+- IntelliJ settings (enable annotation processing)
+
+---
+
+### 🔧 Task 1 — Set Up the Backend
+
+1. Open IntelliJ IDEA → File → Open → select the folder `Backend/documentapproval/`
+2. Wait for Maven to download all dependencies (check the progress bar at the bottom)
+3. Create a new file at this path: `src/main/resources/application.properties`
+   - This file is where you tell Spring Boot how to connect to MySQL and configure the app
+   - Add the following settings:
+     - **Database URL:** `spring.datasource.url=jdbc:mysql://localhost:3306/digital_document_approval`
+     - **Database username:** `spring.datasource.username=root` (or your MySQL username)
+     - **Database password:** `spring.datasource.password=YOUR_PASSWORD`
+     - **Auto-create tables:** `spring.jpa.hibernate.ddl-auto=update` — this tells Hibernate to automatically create/update tables based on your entity classes
+     - **Show SQL:** `spring.jpa.show-sql=true` — lets you see the SQL queries Hibernate runs in the console (helpful for debugging)
+     - **MySQL dialect:** `spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQLDialect`
+     - **App port:** `server.port=8080`
+4. Open `DocumentapprovalApplication.java` — it should have `@SpringBootApplication` annotation on the class and a standard `main()` method. If missing, add them.
+5. Click the green Run button — check the console. You should see `Tomcat started on port(s): 8080`. If you see errors, check your MySQL password and database name.
+
+---
+
+### 🔧 Task 2 — Set Up the Frontend
+
+1. Open a terminal (Command Prompt or VS Code terminal)
+2. Navigate to: `Frontend/digital-document-approval-frontend/`
+3. Run `npm install` — this downloads all Angular packages listed in `package.json` (takes 2–5 minutes first time)
+4. After it finishes, run `ng serve`
+5. Open browser and go to `http://localhost:4200` — you should see a blank/empty page. That's fine — we haven't built any pages yet.
+
+---
+
+### 🔧 Task 3 — Create the Database Schema
+
+Open `Database/dbsql.sql` and write the SQL to create the database and all 6 tables. Then run it in MySQL Workbench (Database → Run SQL Script).
+
+```sql
+CREATE DATABASE digital_document_approval;
+USE digital_document_approval;
+
+-- Table 1: Roles
+-- Stores the 3 types of users: ADMIN, USER, APPROVER
+CREATE TABLE roles (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL
+);
+
+-- Table 2: Departments
+-- Departments group users together (e.g., HR, Finance, IT)
+CREATE TABLE departments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description VARCHAR(255)
+);
+
+-- Table 3: Users
+-- Every person who uses the system has a row here
+-- role_id links to the roles table (what type of user)
+-- department_id links to the departments table (which department)
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    role_id BIGINT,
+    department_id BIGINT,
+    created_at DATETIME,
+    FOREIGN KEY (role_id) REFERENCES roles(id),
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+
+-- Table 4: Documents
+-- Every uploaded document has a row here
+-- uploaded_by links to the users table (who uploaded it)
+-- status can be: DRAFT, PENDING, APPROVED, REJECTED
+CREATE TABLE documents (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    file_path VARCHAR(500),
+    file_type VARCHAR(50),
+    status VARCHAR(50) DEFAULT 'PENDING',
+    uploaded_by BIGINT,
+    created_at DATETIME,
+    updated_at DATETIME,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+);
+
+-- Table 5: Approvals
+-- Every time a document is reviewed, a row is added here
+-- document_id: which document was reviewed
+-- approver_id: which user reviewed it
+-- status: did they APPROVE or REJECT it?
+CREATE TABLE approvals (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    document_id BIGINT,
+    approver_id BIGINT,
+    status VARCHAR(50),
+    comments TEXT,
+    action_date DATETIME,
+    FOREIGN KEY (document_id) REFERENCES documents(id),
+    FOREIGN KEY (approver_id) REFERENCES users(id)
+);
+
+-- Table 6: Notifications
+-- Every notification sent to a user has a row here
+-- is_read: has the user seen this notification?
+CREATE TABLE notifications (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT,
+    message TEXT,
+    is_read BOOLEAN DEFAULT FALSE,
+    created_at DATETIME,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Insert the 3 default roles
+-- Do this AFTER creating the tables
+INSERT INTO roles (name) VALUES ('ADMIN'), ('USER'), ('APPROVER');
+```
+
+**✅ Done when:** Open MySQL Workbench, expand your database — you should see 6 tables and the roles table should have 3 rows.
+
+**📂 Files worked on today:**
+- `Backend/.../DocumentapprovalApplication.java`
+- `Backend/.../src/main/resources/application.properties` ← CREATED NEW
 - `Database/dbsql.sql`
 
 ---
 
-### ✅ Day 2 — JPA Entities: User, Role, Department
+## ✅ Day 2 — Entity Classes: User, Role, Department — DONE
 
-**Goal:** Implement the first three JPA entity classes that map to database tables.
+**Status: COMPLETE — All 3 entity files are fully implemented.**
 
-**What is an entity?** A Java class annotated with `@Entity` that represents a database table. Hibernate automatically maps its fields to columns.
+Open and read these files to understand what was built. You do not need to write any code today for these files, but make sure you understand what each annotation does — you will be tested on this.
 
-**Tasks:**
+- `entity/Role.java` — Maps to the `roles` table. Has `id` and `name` fields. Uses `@Entity`, `@Table`, `@Data`, `@Id`, `@GeneratedValue`.
+- `entity/Department.java` — Maps to the `departments` table. Has `id`, `name`, `description`.
+- `entity/User.java` — Maps to the `users` table. Has `id`, `username`, `email`, `password`, relationships to `Role` and `Department` using `@ManyToOne` and `@JoinColumn`, and `createdAt`.
 
-1. **Implement `entity/Role.java`**
-   ```java
-   @Entity @Table(name = "roles") @Data @NoArgsConstructor @AllArgsConstructor
-   ```
-   - Fields: `Long id`, `String name` (e.g., "ADMIN", "USER", "APPROVER")
-   - Use `@Id @GeneratedValue(strategy = GenerationType.IDENTITY)` on `id`
+**What you should understand after reading these files:**
+- Why `@ManyToOne` is used on the `role` field (many users → one role)
+- What `@JoinColumn(name = "role_id")` does — it defines which column in the `users` table holds the foreign key
+- Why `@Data` is needed — it generates all getters and setters automatically via Lombok
+- Why `@GeneratedValue(strategy = GenerationType.IDENTITY)` is on the `id` field
 
-2. **Implement `entity/Department.java`**
-   ```java
-   @Entity @Table(name = "departments") @Data @NoArgsConstructor @AllArgsConstructor
-   ```
-   - Fields: `Long id`, `String name`, `String description`
+**📂 Files to READ today (no changes needed):**
+- `entity/Role.java`
+- `entity/Department.java`
+- `entity/User.java`
 
-3. **Implement `entity/User.java`**
-   ```java
-   @Entity @Table(name = "users") @Data @NoArgsConstructor @AllArgsConstructor
-   ```
-   - Fields: `Long id`, `String username`, `String email`, `String password`
-   - Relationships:
-     - `@ManyToOne @JoinColumn(name = "role_id")` → `Role role`
-     - `@ManyToOne @JoinColumn(name = "department_id")` → `Department department`
-   - `LocalDateTime createdAt` with `@Column(name = "created_at")`
+A JPA Entity is a regular Java class that Hibernate (the ORM library) automatically maps to a database table.
 
-**Files to work on:**
-- `Backend/.../entity/Role.java`
-- `Backend/.../entity/Department.java`
-- `Backend/.../entity/User.java`
+- `@Entity` tells Hibernate: "this class = a database table"
+- `@Table(name = "users")` tells Hibernate which table name to use
+- `@Id` marks the primary key field
+- `@GeneratedValue(strategy = GenerationType.IDENTITY)` makes the ID auto-increment (like MySQL's `AUTO_INCREMENT`)
+- `@Column(name = "column_name")` maps a field to a specific column name
+- `@ManyToOne` defines a relationship where many rows in this table link to one row in another table
+- `@JoinColumn(name = "foreign_key_column")` specifies which column holds the foreign key
 
-**Imports needed:** `jakarta.persistence.*`, `lombok.*`, `java.time.LocalDateTime`
+### 🧠 What is Lombok?
 
----
+Lombok is a library that automatically generates boilerplate code for you at compile time:
+- `@Data` generates: `getters`, `setters`, `equals()`, `hashCode()`, `toString()`
+- `@NoArgsConstructor` generates: empty constructor `User() {}`
+- `@AllArgsConstructor` generates: constructor with all fields `User(id, username, email, ...)`
 
-### ✅ Day 3 — JPA Entities: Document, Approval, Notification
-
-**Goal:** Implement the remaining three entities and define entity relationships.
-
-**Tasks:**
-
-1. **Create a `DocumentStatus` enum** inside the `entity` package:
-   - Values: `DRAFT`, `PENDING`, `APPROVED`, `REJECTED`
-
-2. **Implement `entity/Document.java`**
-   - Fields: `Long id`, `String title`, `String description`, `String filePath`, `String fileType`, `DocumentStatus status`
-   - `@ManyToOne @JoinColumn(name = "uploaded_by")` → `User uploadedBy`
-   - `LocalDateTime createdAt`, `LocalDateTime updatedAt`
-   - Add `@PrePersist` to auto-set `createdAt` and `@PreUpdate` to auto-set `updatedAt`
-
-3. **Implement `entity/Approval.java`**
-   - Fields: `Long id`, `String comments`, `LocalDateTime actionDate`
-   - `@ManyToOne @JoinColumn(name = "document_id")` → `Document document`
-   - `@ManyToOne @JoinColumn(name = "approver_id")` → `User approver`
-   - `DocumentStatus status` (reuse the same enum)
-
-4. **Implement `entity/Notification.java`**
-   - Fields: `Long id`, `String message`, `boolean isRead`, `LocalDateTime createdAt`
-   - `@ManyToOne @JoinColumn(name = "user_id")` → `User user`
-
-**Files to work on:**
-- `Backend/.../entity/Document.java`
-- `Backend/.../entity/Approval.java`
-- `Backend/.../entity/Notification.java`
-- Create: `Backend/.../entity/DocumentStatus.java` (enum)
+**You must import `lombok.*` and `jakarta.persistence.*` in each entity file.**
 
 ---
 
-### ✅ Day 4 — Repositories & DTOs
+### 📄 File 1 — Open `entity/Role.java`
 
-**Goal:** Implement all Spring Data JPA repositories and DTO classes for request/response transfer.
+This class maps to the `roles` table in the database.
 
-**What is a repository?** An interface extending `JpaRepository<Entity, ID>`. Spring auto-generates SQL queries.
+**Add these annotations on the class:**
+- `@Entity` — marks this as a JPA entity
+- `@Table(name = "roles")` — maps to the `roles` table
+- `@Data` — Lombok generates getters/setters
+- `@NoArgsConstructor` — Lombok generates empty constructor
+- `@AllArgsConstructor` — Lombok generates full constructor
 
-**Tasks:**
-
-1. **Implement all 5 repositories** — each extends `JpaRepository`:
-
-   - `UserRepository.java`:
-     ```java
-     Optional<User> findByEmail(String email);
-     Optional<User> findByUsername(String username);
-     boolean existsByEmail(String email);
-     ```
-
-   - `DocumentRepository.java`:
-     ```java
-     List<Document> findByUploadedBy(User user);
-     List<Document> findByStatus(DocumentStatus status);
-     ```
-
-   - `ApprovalRepository.java`:
-     ```java
-     List<Approval> findByDocument(Document document);
-     List<Approval> findByApprover(User approver);
-     Optional<Approval> findByDocumentAndApprover(Document doc, User approver);
-     ```
-
-   - `DepartmentRepository.java`: just extend `JpaRepository<Department, Long>`
-
-   - `NotificationRepository.java`:
-     ```java
-     List<Notification> findByUserAndIsReadFalse(User user);
-     List<Notification> findByUser(User user);
-     ```
-
-2. **Implement all DTOs** — plain Java classes with Lombok `@Data`:
-
-   - `LoginRequest.java`: `String email`, `String password`
-   - `RegisterRequest.java`: `String username`, `String email`, `String password`, `String roleName`, `Long departmentId`
-   - `DocumentRequest.java`: `String title`, `String description` *(file will come via multipart)*
-   - `DocumentResponse.java`: `Long id`, `String title`, `String description`, `String status`, `String uploadedByUsername`, `String filePath`, `String createdAt`
-   - `ApprovalRequest.java`: `Long documentId`, `String status`, `String comments`
-   - `DepartmentRequest.java`: `String name`, `String description`
-   - `UserRequest.java`: `String username`, `String email`, `Long roleId`, `Long departmentId`
-   - `UserResponse.java`: `Long id`, `String username`, `String email`, `String role`, `String department`
-   - `NotificationResponse.java`: `Long id`, `String message`, `boolean isRead`, `String createdAt`
-
-**Files to work on:**
-- All 5 files in `Backend/.../repository/`
-- All 9 files in `Backend/.../dto/`
+**Add these fields inside the class:**
+- `Long id` — the primary key. Annotate with `@Id` and `@GeneratedValue(strategy = GenerationType.IDENTITY)`
+- `String name` — stores "ADMIN", "USER", or "APPROVER". No special annotations needed.
 
 ---
 
-### ✅ Day 5 — JWT Security Setup
+### 📄 File 2 — Open `entity/Department.java`
 
-**Goal:** Implement JWT-based stateless authentication — the most critical infrastructure piece.
+This class maps to the `departments` table.
 
-**Why JWT?** The backend needs to issue a token on login; Angular sends it with every request via Authorization header.
+**Add class annotations:** `@Entity`, `@Table(name = "departments")`, `@Data`, `@NoArgsConstructor`, `@AllArgsConstructor`
 
-**First add the JWT dependency to `pom.xml`:**
-```xml
-<dependency>
-    <groupId>io.jsonwebtoken</groupId>
-    <artifactId>jjwt-api</artifactId>
-    <version>0.11.5</version>
-</dependency>
-<dependency>
-    <groupId>io.jsonwebtoken</groupId>
-    <artifactId>jjwt-impl</artifactId>
-    <version>0.11.5</version>
-    <scope>runtime</scope>
-</dependency>
-<dependency>
-    <groupId>io.jsonwebtoken</groupId>
-    <artifactId>jjwt-jackson</artifactId>
-    <version>0.11.5</version>
-    <scope>runtime</scope>
-</dependency>
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-security</artifactId>
-</dependency>
-```
-
-**Tasks:**
-
-1. **Implement `security/JwtService.java`** — annotate with `@Service`
-   - Add to `application.properties`: `jwt.secret=yourBase64SecretKeyHere` and `jwt.expiration=86400000`
-   - Method `generateToken(UserDetails userDetails)` → returns JWT string
-   - Method `extractUsername(String token)` → returns email from token
-   - Method `isTokenValid(String token, UserDetails userDetails)` → returns boolean
-   - Use `Jwts.builder()` / `Jwts.parserBuilder()` from the jjwt library
-
-2. **Implement `security/CustomUserDetailsService.java`** — implements `UserDetailsService`
-   - Inject `UserRepository`
-   - Override `loadUserByUsername(String email)`:
-     - Find user by email using `userRepository.findByEmail(email)`
-     - Return a `org.springframework.security.core.userdetails.User` built from the entity
-     - Throw `UsernameNotFoundException` if not found
-
-3. **Implement `security/JwtAuthenticationFilter.java`** — extends `OncePerRequestFilter`
-   - Inject `JwtService` and `CustomUserDetailsService`
-   - In `doFilterInternal()`:
-     - Read the `Authorization` header
-     - If it starts with "Bearer ", extract the token
-     - Validate the token and set `SecurityContextHolder` authentication
-
-**Files to work on:**
-- `Backend/.../security/JwtService.java`
-- `Backend/.../security/CustomUserDetailsService.java`
-- `Backend/.../security/JwtAuthenticationFilter.java`
-- `Backend/.../pom.xml` (add dependencies)
-- `Backend/.../src/main/resources/application.properties`
+**Add these fields:**
+- `Long id` — annotate with `@Id` and `@GeneratedValue(strategy = GenerationType.IDENTITY)`
+- `String name` — department name like "HR" or "Finance"
+- `String description` — optional description of the department
 
 ---
 
-### ✅ Day 6 — Security Config & Exception Handling
+### 📄 File 3 — Open `entity/User.java`
 
-**Goal:** Wire up Spring Security configuration and global error handling.
+This is the most complex entity because it has relationships to Role and Department.
 
-**Tasks:**
+**Add class annotations:** `@Entity`, `@Table(name = "users")`, `@Data`, `@NoArgsConstructor`, `@AllArgsConstructor`
 
-1. **Create `config/SecurityConfig.java`** *(new file in the empty `config/` folder)*
-   - Annotate with `@Configuration @EnableWebSecurity`
-   - Define a `SecurityFilterChain` bean:
-     - Disable CSRF (REST API doesn't need it)
-     - Permit `/api/auth/**` without authentication
-     - Require authentication for all other requests
-     - Add `JwtAuthenticationFilter` before `UsernamePasswordAuthenticationFilter`
-     - Configure CORS to allow `http://localhost:4200`
-   - Define `BCryptPasswordEncoder` bean
-   - Define `AuthenticationManager` bean
+**Add these fields:**
+- `Long id` — annotate with `@Id` and `@GeneratedValue`
+- `String username`
+- `String email`
+- `String password` — this will be stored as a hashed value (never plain text)
+- `Role role` — this is a relationship field. Annotate with:
+  - `@ManyToOne` — means "many users can have one role"
+  - `@JoinColumn(name = "role_id")` — the foreign key column in the users table
+- `Department department` — another relationship field. Annotate with:
+  - `@ManyToOne` — many users can belong to one department
+  - `@JoinColumn(name = "department_id")`
+- `LocalDateTime createdAt` — use `@Column(name = "created_at")` to match the exact column name in the table
 
-2. **Implement `exception/ResourceNotFoundException.java`**
-   - Extend `RuntimeException`
-   - Constructor: `ResourceNotFoundException(String message)`
+**Important imports needed:**
+- `jakarta.persistence.*` for all `@Entity`, `@Table`, `@Id`, `@ManyToOne`, etc.
+- `lombok.*` for `@Data`, `@NoArgsConstructor`, `@AllArgsConstructor`
+- `java.time.LocalDateTime`
 
-3. **Implement `exception/BadRequestException.java`**
-   - Extend `RuntimeException`
-   - Constructor: `BadRequestException(String message)`
-
-4. **Implement `exception/GlobalExceptionHandler.java`**
-   - Annotate with `@RestControllerAdvice`
-   - Handle `ResourceNotFoundException` → return `404` with error message
-   - Handle `BadRequestException` → return `400` with error message
-   - Handle generic `Exception` → return `500`
-   - Return responses as `Map<String, String>` with keys `"error"` and `"message"`
-
-5. **Implement utility helpers:**
-   - `util/ValidationUtil.java`: static method `isValidEmail(String email)` using regex
-   - `util/FileUploadUtil.java`: static method `saveFile(String uploadDir, String filename, MultipartFile file)` that writes file to disk and returns the saved file path
-
-**Files to work on:**
-- `Backend/.../config/SecurityConfig.java` *(create new file)*
-- `Backend/.../exception/ResourceNotFoundException.java`
-- `Backend/.../exception/BadRequestException.java`
-- `Backend/.../exception/GlobalExceptionHandler.java`
-- `Backend/.../util/ValidationUtil.java`
-- `Backend/.../util/FileUploadUtil.java`
+**📂 Files worked on today:**
+- `entity/Role.java`
+- `entity/Department.java`
+- `entity/User.java`
 
 ---
 
-## Week 2 — Backend Services & REST APIs (Days 7–13)
+## ✅ Day 3 — Entity Classes: DocumentStatus (Enum), Document, Approval, Notification
+
+### 🧠 What is an Enum?
+
+An enum (enumeration) is a special Java type for a fixed set of constants. Instead of storing random strings like "pending" or "PENDING" or "Pending" in the database, an enum forces the value to always be one of the defined options.
+
+**When to use:** Whenever a field can only have a limited number of known values — like document status.
 
 ---
 
-### ✅ Day 7 — Auth Service & Auth Controller
+### 📄 First — Create NEW file `entity/DocumentStatus.java`
 
-**Goal:** Implement user registration and login endpoints — the entry point to the entire system.
-
-**Tasks:**
-
-1. **Implement `services/AuthService.java`** — annotate with `@Service`
-   - Inject: `UserRepository`, `BCryptPasswordEncoder`, `JwtService`, `AuthenticationManager`, `RoleRepository` *(you'll need to create `RoleRepository` — extends `JpaRepository<Role, Long>` and add `Optional<Role> findByName(String name)`)*
-   - Method `register(RegisterRequest request)` → `Map<String, String>`:
-     - Check if email already exists (`userRepository.existsByEmail`) → throw `BadRequestException` if so
-     - Find role by name from request
-     - Hash password using `passwordEncoder.encode()`
-     - Save new `User` entity
-     - Return `{"message": "User registered successfully"}`
-   - Method `login(LoginRequest request)` → `Map<String, String>`:
-     - Use `authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(...))`
-     - Load user details via `CustomUserDetailsService`
-     - Generate JWT using `jwtService.generateToken()`
-     - Return `{"token": "...", "role": "...", "username": "..."}`
-
-2. **Implement `controller/AuthController.java`** — annotate with `@RestController @RequestMapping("/api/auth")`
-   - Inject `AuthService`
-   - `POST /api/auth/register` → calls `authService.register()` → returns `ResponseEntity`
-   - `POST /api/auth/login` → calls `authService.login()` → returns `ResponseEntity` with token
-
-**Files to work on:**
-- `Backend/.../services/AuthService.java`
-- `Backend/.../controller/AuthController.java`
-- Create: `Backend/.../repository/RoleRepository.java`
-
-**Test with Postman:**
-- POST `http://localhost:8080/api/auth/register` with JSON body
-- POST `http://localhost:8080/api/auth/login` — should return JWT token
+- Create a new Java file called `DocumentStatus` in the `entity` package
+- Make it an `enum` (not a `class`)
+- Add these 4 values: `DRAFT`, `PENDING`, `APPROVED`, `REJECTED`
+- A document starts as `DRAFT` when saved without submitting, becomes `PENDING` when submitted for approval, then either `APPROVED` or `REJECTED` after the approver acts on it.
 
 ---
 
-### ✅ Day 8 — User Service & User Controller
+### 📄 File 1 — Open `entity/Document.java`
 
-**Goal:** Implement user profile and admin user management APIs.
+**Add class annotations:** `@Entity`, `@Table(name = "documents")`, `@Data`, `@NoArgsConstructor`, `@AllArgsConstructor`
 
-**Tasks:**
+**Add these fields:**
+- `Long id` — annotate with `@Id` and `@GeneratedValue`
+- `String title`
+- `String description`
+- `String filePath` — use `@Column(name = "file_path")` to match the column name. This stores the path on disk where the file is saved (e.g., `"uploads/report.pdf"`)
+- `String fileType` — stores file extension like "pdf" or "docx". Use `@Column(name = "file_type")`
+- `DocumentStatus status` — this uses the enum you just created. Annotate with `@Enumerated(EnumType.STRING)` so it saves as text like "PENDING" instead of a number
+- `User uploadedBy` — relationship to User. Use `@ManyToOne` and `@JoinColumn(name = "uploaded_by")`
+- `LocalDateTime createdAt` — use `@Column(name = "created_at")`
+- `LocalDateTime updatedAt` — use `@Column(name = "updated_at")`
 
-1. **Implement `services/UserService.java`** — annotate with `@Service`
-   - Inject: `UserRepository`
-   - Method `getAllUsers()` → `List<UserResponse>` — map each `User` entity to `UserResponse` DTO
-   - Method `getUserById(Long id)` → `UserResponse` — throw `ResourceNotFoundException` if not found
-   - Method `updateUser(Long id, UserRequest request)` → `UserResponse` — find by id, update fields, save
-   - Method `deleteUser(Long id)` → void — find by id, delete
-
-2. **Implement `controller/UserController.java`** — `@RestController @RequestMapping("/api/users")`
-   - Inject `UserService`
-   - `GET /api/users` → `getAllUsers()` — protected (ADMIN only)
-   - `GET /api/users/{id}` → `getUserById(id)`
-   - `PUT /api/users/{id}` → `updateUser(id, request)`
-   - `DELETE /api/users/{id}` → `deleteUser(id)` — ADMIN only
-
-3. **Implement `controller/AdminController.java`** — `@RestController @RequestMapping("/api/admin")`
-   - `GET /api/admin/users` → delegates to `userService.getAllUsers()`
-   - `GET /api/admin/dashboard-stats` → returns counts: total users, total documents, pending approvals *(inject DocumentRepository and ApprovalRepository for counts)*
-
-**Files to work on:**
-- `Backend/.../services/UserService.java`
-- `Backend/.../controller/UserController.java`
-- `Backend/.../controller/AdminController.java`
+**Add these lifecycle methods:**
+- A method annotated with `@PrePersist` — this runs automatically just before a new record is saved to the database. Inside it, set `createdAt = LocalDateTime.now()`
+- A method annotated with `@PreUpdate` — this runs automatically just before an existing record is updated. Inside it, set `updatedAt = LocalDateTime.now()`
+- Name the methods anything you like, e.g., `onCreate()` and `onUpdate()`
 
 ---
 
-### ✅ Day 9 — Department Service & Controller
+### 📄 File 2 — Open `entity/Approval.java`
 
-**Goal:** Implement department CRUD — departments group users and route documents.
+**Add class annotations:** `@Entity`, `@Table(name = "approvals")`, `@Data`, `@NoArgsConstructor`, `@AllArgsConstructor`
 
-**Tasks:**
-
-1. **Implement `services/DepartmentService.java`** — `@Service`
-   - Inject: `DepartmentRepository`
-   - `getAllDepartments()` → `List<Department>`
-   - `getDepartmentById(Long id)` → `Department` (throw `ResourceNotFoundException` if not found)
-   - `createDepartment(DepartmentRequest request)` → `Department`
-   - `updateDepartment(Long id, DepartmentRequest request)` → `Department`
-   - `deleteDepartment(Long id)` → void
-
-2. **Implement `controller/DepartmentController.java`** — `@RestController @RequestMapping("/api/departments")`
-   - `GET /api/departments` → get all (public/authenticated)
-   - `GET /api/departments/{id}` → get one
-   - `POST /api/departments` → create (ADMIN only)
-   - `PUT /api/departments/{id}` → update (ADMIN only)
-   - `DELETE /api/departments/{id}` → delete (ADMIN only)
-
-**Files to work on:**
-- `Backend/.../services/DepartmentService.java`
-- `Backend/.../controller/DepartmentController.java`
+**Add these fields:**
+- `Long id` — `@Id` and `@GeneratedValue`
+- `Document document` — `@ManyToOne` and `@JoinColumn(name = "document_id")`. This links the approval to the document being reviewed.
+- `User approver` — `@ManyToOne` and `@JoinColumn(name = "approver_id")`. This links the approval to the person who reviewed it.
+- `DocumentStatus status` — use `@Enumerated(EnumType.STRING)`. Will be APPROVED or REJECTED.
+- `String comments` — the approver's written feedback
+- `LocalDateTime actionDate` — when the approval/rejection happened. Use `@Column(name = "action_date")`
 
 ---
 
-### ✅ Day 10 — Document Service (Upload & Fetch)
+### 📄 File 3 — Open `entity/Notification.java`
 
-**Goal:** Implement document upload and retrieval — the core feature of the system.
+**Add class annotations:** `@Entity`, `@Table(name = "notifications")`, `@Data`, `@NoArgsConstructor`, `@AllArgsConstructor`
 
-**Tasks:**
+**Add these fields:**
+- `Long id` — `@Id` and `@GeneratedValue`
+- `User user` — `@ManyToOne` and `@JoinColumn(name = "user_id")`. Who receives this notification.
+- `String message` — the notification text, e.g., "Your document 'Q1 Report' was approved"
+- `boolean isRead` — has the user seen this? Defaults to `false`. Use `@Column(name = "is_read")`
+- `LocalDateTime createdAt` — use `@Column(name = "created_at")`
 
-1. **Implement `services/DocumentService.java`** — `@Service`
-   - Inject: `DocumentRepository`, `UserRepository`, `FileUploadUtil`
-   - Add to `application.properties`: `file.upload.dir=uploads/`
-
-   - `uploadDocument(DocumentRequest request, MultipartFile file, String uploaderEmail)` → `DocumentResponse`:
-     - Find the uploading user by email
-     - Use `FileUploadUtil.saveFile()` to save the file to disk
-     - Create a `Document` entity with status `PENDING`
-     - Save and return as `DocumentResponse`
-
-   - `getAllDocuments()` → `List<DocumentResponse>` — for ADMIN
-
-   - `getDocumentsByUser(String email)` → `List<DocumentResponse>` — for logged-in user
-
-   - `getDocumentById(Long id)` → `DocumentResponse`
-
-   - `getDocumentsByStatus(DocumentStatus status)` → `List<DocumentResponse>`
-
-   - `deleteDocument(Long id)` → void
-
-2. **Implement `controller/DocumentController.java`** — `@RestController @RequestMapping("/api/documents")`
-   - `POST /api/documents/upload` → accepts `@RequestPart DocumentRequest` + `@RequestPart MultipartFile file`
-   - `GET /api/documents` → get all (ADMIN)
-   - `GET /api/documents/my` → get current user's documents (use `@AuthenticationPrincipal`)
-   - `GET /api/documents/{id}` → get one
-   - `GET /api/documents/status/{status}` → filter by status
-   - `DELETE /api/documents/{id}` → delete
-
-**Files to work on:**
-- `Backend/.../services/DocumentService.java`
-- `Backend/.../controller/DocumentController.java`
+**📂 Files worked on today:**
+- `entity/DocumentStatus.java` ← CREATED NEW
+- `entity/Document.java`
+- `entity/Approval.java`
+- `entity/Notification.java`
 
 ---
 
-### ✅ Day 11 — Approval Service & Controller
+## ✅ Day 4 — Repository Interfaces and DTOs
 
-**Goal:** Implement the approval workflow — approvers can approve or reject documents.
+### 🧠 What is a Spring Data JPA Repository?
 
-**Tasks:**
+A repository is a Java `interface` (not a class) that extends `JpaRepository<Entity, IdType>`. Spring automatically creates the implementation for you — you never have to write SQL manually.
 
-1. **Implement `services/ApprovalService.java`** — `@Service`
-   - Inject: `ApprovalRepository`, `DocumentRepository`, `UserRepository`, `NotificationService`
+**Built-in methods you get for free:** `findAll()`, `findById(id)`, `save(entity)`, `delete(entity)`, `count()`
 
-   - `submitForApproval(Long documentId, String approverEmail)` → `Approval`:
-     - Find document, set status to `PENDING`
-     - Create an `Approval` record with `PENDING` status
-     - Trigger a notification to the approver
-     - Save and return
+**Custom methods using method naming:** Spring reads your method name and generates SQL automatically:
+- `findByEmail(String email)` → Spring generates: `SELECT * FROM users WHERE email = ?`
+- `findByUploadedBy(User user)` → Spring generates: `SELECT * FROM documents WHERE uploaded_by = ?`
+- `existsByEmail(String email)` → Spring generates: `SELECT COUNT(*) FROM users WHERE email = ?` and returns boolean
 
-   - `processApproval(ApprovalRequest request, String approverEmail)` → `Approval`:
-     - Find the `Approval` record for the document + approver
-     - Update `Approval.status` to APPROVED or REJECTED
-     - Update `Document.status` accordingly
-     - Trigger a notification to the document uploader
-     - Save and return
+### 🧠 What is a DTO?
 
-   - `getPendingApprovalsByApprover(String approverEmail)` → `List<Approval>`
+DTO = Data Transfer Object. It is a plain Java class with only fields, and uses Lombok `@Data` for getters/setters. No business logic.
 
-   - `getApprovalHistoryForDocument(Long documentId)` → `List<Approval>`
-
-2. **Implement `controller/ApprovalController.java`** — `@RestController @RequestMapping("/api/approvals")`
-   - `POST /api/approvals/submit` → submit document for approval
-   - `POST /api/approvals/process` → approve or reject (`ApprovalRequest` body)
-   - `GET /api/approvals/pending` → get pending approvals for current approver
-   - `GET /api/approvals/document/{documentId}` → get approval history
-
-**Files to work on:**
-- `Backend/.../services/ApprovalService.java`
-- `Backend/.../controller/ApprovalController.java`
+**Why use DTOs instead of entities directly?**
+- You don't want to expose all entity fields to the outside world (e.g., never send the `password` field in responses)
+- Request DTOs receive incoming data from the frontend
+- Response DTOs control exactly what data is sent back
 
 ---
 
-### ✅ Day 12 — Notification Service & Report Service
+### 📄 Repository Files — Open each and write:
 
-**Goal:** Implement in-app notifications and reporting endpoints.
+**`repository/UserRepository.java`**
+- Interface that extends `JpaRepository<User, Long>`
+- Add method: `Optional<User> findByEmail(String email)` — used to find a user when they log in
+- Add method: `boolean existsByEmail(String email)` — used during registration to check if email is already taken
+- Spring generates the SQL automatically from the method names
 
-**Tasks:**
+**`repository/DocumentRepository.java`**
+- Extends `JpaRepository<Document, Long>`
+- Add method: `List<Document> findByUploadedBy(User user)` — get all documents by a specific user
+- Add method: `List<Document> findByStatus(DocumentStatus status)` — filter documents by status
 
-1. **Implement `services/NotificationService.java`** — `@Service`
-   - Inject: `NotificationRepository`, `UserRepository`
-   - `createNotification(User user, String message)` → `Notification` — saves a new notification
-   - `getUserNotifications(String email)` → `List<NotificationResponse>` — all notifications for user
-   - `getUnreadNotifications(String email)` → `List<NotificationResponse>` — only unread
-   - `markAsRead(Long notificationId)` → void — find by id, set `isRead = true`, save
-   - `markAllAsRead(String email)` → void — find all unread for user, mark all as read
+**`repository/ApprovalRepository.java`**
+- Extends `JpaRepository<Approval, Long>`
+- Add method: `List<Approval> findByApprover(User approver)` — get all approvals by a specific approver
+- Add method: `List<Approval> findByDocument(Document document)` — get all approvals for a document
+- Add method: `Optional<Approval> findByDocumentAndApprover(Document doc, User approver)` — find one specific approval record
 
-2. **Implement `controller/NotificationController.java`** — `@RestController @RequestMapping("/api/notifications")`
-   - `GET /api/notifications` → all notifications for current user
-   - `GET /api/notifications/unread` → unread count and list
-   - `PUT /api/notifications/{id}/read` → mark one as read
-   - `PUT /api/notifications/read-all` → mark all as read
+**`repository/DepartmentRepository.java`**
+- Extends `JpaRepository<Department, Long>`
+- No extra methods needed — the default `findAll()`, `save()`, `findById()`, `deleteById()` are enough
 
-3. **Implement `services/ReportService.java`** — `@Service`
-   - Inject: `DocumentRepository`, `ApprovalRepository`, `UserRepository`
-   - `getSummaryReport()` → `Map<String, Object>` with:
-     - Total documents by status (counts)
-     - Total users, total departments
-     - Approvals this month
-   - `getDocumentStatusBreakdown()` → `Map<String, Long>` (status → count)
-
-4. **Implement `controller/ReportController.java`** — `@RestController @RequestMapping("/api/reports")`
-   - `GET /api/reports/summary` → calls `reportService.getSummaryReport()`
-   - `GET /api/reports/document-status` → calls `reportService.getDocumentStatusBreakdown()`
-
-**Files to work on:**
-- `Backend/.../services/NotificationService.java`
-- `Backend/.../controller/NotificationController.java`
-- `Backend/.../services/ReportService.java`
-- `Backend/.../controller/ReportController.java`
+**`repository/NotificationRepository.java`**
+- Extends `JpaRepository<Notification, Long>`
+- Add method: `List<Notification> findByUser(User user)` — all notifications for a user
+- Add method: `List<Notification> findByUserAndIsReadFalse(User user)` — only the UNREAD ones. Note: `IsReadFalse` in the method name → Spring generates `WHERE is_read = false`
 
 ---
 
-### ✅ Day 13 — Backend Testing & Postman Collection
+### 📄 DTO Files — Open each and add fields with `@Data` annotation:
 
-**Goal:** Test all APIs end-to-end and ensure the backend is stable.
+**`dto/LoginRequest.java`** — data received when user submits login form
+- `String email`
+- `String password`
 
-**Tasks:**
+**`dto/RegisterRequest.java`** — data received when user submits registration form
+- `String username`
+- `String email`
+- `String password`
+- `String roleName` — the role they want (e.g. "USER")
+- `Long departmentId` — which department they belong to
 
-1. **Create a Postman collection** with requests for every endpoint:
-   - Auth: register, login
-   - Documents: upload, get all, get by user, get by status, delete
-   - Approvals: submit, process, get pending, get history
-   - Notifications: get all, mark read
-   - Reports: summary, document-status breakdown
-   - Departments: CRUD
-   - Users: CRUD
+**`dto/DocumentRequest.java`** — data received when uploading a document (the text fields; the actual file comes separately as `MultipartFile`)
+- `String title`
+- `String description`
 
-2. **Fix any issues found** — common problems to watch for:
-   - CORS errors → check `SecurityConfig.java` CORS configuration
-   - 403 Forbidden → check endpoint security rules in `SecurityConfig`
-   - File upload errors → check `FileUploadUtil.java` and `application.properties` upload dir
-   - Entity relationships not loading → check if `FetchType.LAZY` vs `EAGER` is set correctly
+**`dto/DocumentResponse.java`** — data SENT BACK when frontend asks for document info
+- `Long id`
+- `String title`
+- `String description`
+- `String status` — e.g. "PENDING"
+- `String uploadedByUsername` — just the username, not the whole User object
+- `String filePath`
+- `String createdAt`
 
-3. **Write a basic unit test** in `src/test/` for `AuthService`:
-   - Test that `register()` throws `BadRequestException` when email already exists
-   - Use `@ExtendWith(MockitoExtension.class)` and `@Mock` for `UserRepository`
+**`dto/ApprovalRequest.java`** — data received when approver submits their decision
+- `Long documentId` — which document they are reviewing
+- `String status` — "APPROVED" or "REJECTED"
+- `String comments` — their feedback
 
-**Files to work on:**
-- All controller and service files (bug fixes)
-- `Backend/.../src/test/java/.../AuthServiceTest.java` *(create new)*
+**`dto/UserRequest.java`** — data received when updating a user
+- `String username`
+- `String email`
+- `Long roleId`
+- `Long departmentId`
 
----
+**`dto/UserResponse.java`** — data SENT BACK when frontend asks for user info
+- `Long id`
+- `String username`
+- `String email`
+- `String role` — just the role name, not the whole Role object
+- `String department` — just the department name
 
-## Week 3 — Angular Frontend Core (Days 14–20)
+**`dto/NotificationResponse.java`** — data SENT BACK for notifications
+- `Long id`
+- `String message`
+- `boolean isRead`
+- `String createdAt`
 
----
+**`dto/DepartmentRequest.java`** — data received when creating/updating a department
+- `String name`
+- `String description`
 
-### ✅ Day 14 — Angular Models, Services & HTTP Setup
-
-**Goal:** Define TypeScript models and implement Angular HTTP services that talk to the backend.
-
-**Tasks:**
-
-1. **Implement TypeScript models in `src/app/models/`:**
-
-   - `user.ts`:
-     ```typescript
-     export interface User { id: number; username: string; email: string; role: string; department: string; }
-     export interface LoginRequest { email: string; password: string; }
-     export interface RegisterRequest { username: string; email: string; password: string; roleName: string; departmentId: number; }
-     export interface AuthResponse { token: string; role: string; username: string; }
-     ```
-
-   - `document.ts`:
-     ```typescript
-     export interface Document { id: number; title: string; description: string; status: string; uploadedByUsername: string; filePath: string; createdAt: string; }
-     export interface DocumentRequest { title: string; description: string; }
-     ```
-
-   - `approval.ts`:
-     ```typescript
-     export interface Approval { id: number; documentId: number; approverUsername: string; status: string; comments: string; actionDate: string; }
-     export interface ApprovalRequest { documentId: number; status: string; comments: string; }
-     ```
-
-   - `notification.ts`:
-     ```typescript
-     export interface Notification { id: number; message: string; isRead: boolean; createdAt: string; }
-     ```
-
-2. **Implement `services/auth.ts`** — rename class to `AuthService`:
-   - Inject `HttpClient`
-   - `login(req: LoginRequest)` → `Observable<AuthResponse>` — POST `/api/auth/login`
-   - `register(req: RegisterRequest)` → `Observable<any>` — POST `/api/auth/register`
-   - `logout()` → clears localStorage token
-   - `getToken()` → returns token from localStorage
-   - `isLoggedIn()` → returns `!!this.getToken()`
-   - `getUserRole()` → returns role stored in localStorage
-
-3. **Implement `services/document.ts`** — rename class to `DocumentService`:
-   - `uploadDocument(title: string, description: string, file: File)` → `Observable<Document>` — POST with `FormData`
-   - `getMyDocuments()` → `Observable<Document[]>` — GET `/api/documents/my`
-   - `getAllDocuments()` → `Observable<Document[]>` — GET `/api/documents`
-   - `deleteDocument(id: number)` → `Observable<any>`
-
-4. **Implement `services/approval.ts`** → rename to `ApprovalService`:
-   - `getPendingApprovals()` → `Observable<Approval[]>`
-   - `processApproval(req: ApprovalRequest)` → `Observable<Approval>`
-
-5. **Implement `services/notification.ts`** → rename to `NotificationService`:
-   - `getNotifications()` → `Observable<Notification[]>`
-   - `markAsRead(id: number)` → `Observable<any>`
-   - `markAllAsRead()` → `Observable<any>`
-
-6. **Add `environment.ts`** in `src/environments/`:
-   ```typescript
-   export const environment = { apiUrl: 'http://localhost:8080' };
-   ```
-   Use `environment.apiUrl` as the base URL in all services.
-
-**Files to work on:**
-- `Frontend/.../src/app/models/user.ts`
-- `Frontend/.../src/app/models/document.ts`
-- `Frontend/.../src/app/models/approval.ts`
-- `Frontend/.../src/app/models/notification.ts`
-- `Frontend/.../src/app/services/auth.ts`
-- `Frontend/.../src/app/services/document.ts`
-- `Frontend/.../src/app/services/approval.ts`
-- `Frontend/.../src/app/services/notification.ts`
-- Create: `Frontend/.../src/environments/environment.ts`
+**📂 Files worked on today:**
+- All 5 files in `repository/`
+- All 9 files in `dto/`
 
 ---
 
-### ✅ Day 15 — HTTP Interceptors & Route Guards
+## ✅ Day 5 — JWT Security Setup
 
-**Goal:** Automatically attach JWT to every request and protect routes from unauthorized access.
+### 🧠 How JWT Authentication Works (Step by Step)
 
-**Tasks:**
+1. User sends their email and password to `POST /api/auth/login`
+2. Backend verifies the credentials against the database
+3. Backend creates a JWT token — a string like `eyJhbGciOiJIUzI1NiJ9...` — and sends it back
+4. The frontend stores this token in `localStorage`
+5. For every future API request, the frontend automatically adds the header: `Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...`
+6. The backend reads this header, validates the token, and knows who is making the request
+7. No need to log in again for each request — the token acts as a pass
 
-1. **Implement `interceptors/auth-interceptor.ts`** — rename class to `AuthInterceptor`:
-   - Implements `HttpInterceptor`
-   - In `intercept()`:
-     - Get token using `authService.getToken()`
-     - If token exists, clone the request and add `Authorization: Bearer <token>` header
-     - Pass the modified request through
+### 🧠 The Three Security Files and What They Do
 
-2. **Implement `interceptors/error-interceptor.ts`** — rename to `ErrorInterceptor`:
-   - Implements `HttpInterceptor`
-   - In `intercept()`:
-     - Use `catchError` from RxJS
-     - If error status is `401` → call `authService.logout()` and navigate to `/login`
-     - If error status is `403` → show an alert or navigate to an unauthorized page
-     - Re-throw other errors
-
-3. **Implement `guards/auth-guard.ts`** — rename to `AuthGuard`:
-   - Implements `CanActivate`
-   - Check `authService.isLoggedIn()` → if true, allow; if false, redirect to `/login`
-
-4. **Implement `guards/admin-guard.ts`** → rename to `AdminGuard`:
-   - Check `authService.getUserRole() === 'ADMIN'`
-
-5. **Implement `guards/role-guard.ts`** → rename to `RoleGuard`:
-   - Implement `CanActivate` with `ActivatedRouteSnapshot`
-   - Read `data['roles']` from route config
-   - Check if current user's role is in the allowed roles array
-
-6. **Register interceptors in `app.config.ts`:**
-   ```typescript
-   providers: [
-     provideHttpClient(withInterceptorsFromDi()),
-     { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
-     { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
-   ]
-   ```
-
-**Files to work on:**
-- `Frontend/.../src/app/interceptors/auth-interceptor.ts`
-- `Frontend/.../src/app/interceptors/error-interceptor.ts`
-- `Frontend/.../src/app/guards/auth-guard.ts`
-- `Frontend/.../src/app/guards/admin-guard.ts`
-- `Frontend/.../src/app/guards/role-guard.ts`
-- `Frontend/.../src/app/app.config.ts`
+- **`JwtService`** — Creates tokens and reads information from tokens
+- **`CustomUserDetailsService`** — When Spring Security needs to know who a user is (by email), it calls this class to load the user from the database
+- **`JwtAuthenticationFilter`** — Runs on EVERY incoming request before the controller. Reads the token from the header, validates it, and tells Spring Security "this request is from user X"
 
 ---
 
-### ✅ Day 16 — Login & Register Components
+### 🔧 First — Add Dependencies to `pom.xml`
 
-**Goal:** Build the authentication UI — the first screens a user sees.
+Open `pom.xml` and add these dependencies inside the `<dependencies>` section. These are the JWT and Spring Security libraries:
 
-**Tasks:**
+- `spring-boot-starter-security` (from `org.springframework.boot`) — adds Spring Security to the project
+- `jjwt-api` version `0.11.5` (from `io.jsonwebtoken`) — the JWT API
+- `jjwt-impl` version `0.11.5` (from `io.jsonwebtoken`) — JWT implementation, use `<scope>runtime</scope>`
+- `jjwt-jackson` version `0.11.5` (from `io.jsonwebtoken`) — JWT JSON support, use `<scope>runtime</scope>`
 
-1. **Implement `components/login/login.ts`** — rename class to `LoginComponent`:
-   - Inject `AuthService`, `Router`, `FormBuilder`
-   - Create a `FormGroup` with `email` and `password` fields using `Validators.required` and `Validators.email`
-   - `onSubmit()` method:
-     - Call `authService.login()`
-     - On success: save token/role/username to `localStorage`, navigate to `/dashboard`
-     - On error: set an error message string to display in the template
+After adding, click the Maven refresh button in IntelliJ to download the new libraries.
 
-2. **Implement `components/login/login.html`:**
-   - A centered card layout with the app logo/title
-   - Email input field bound to `loginForm.get('email')`
-   - Password input with show/hide toggle
-   - Error message display with `*ngIf`
-   - Submit button (disable when form is invalid or loading)
-   - Link to register page
+### 🔧 Then — Add to `application.properties`
 
-3. **Implement `components/register/register.ts`** — rename to `RegisterComponent`:
-   - Form fields: `username`, `email`, `password`, `confirmPassword`, `departmentId`
-   - Inject `AuthService`, `DepartmentService` (create this service — GET `/api/departments`)
-   - `ngOnInit()`: load departments for the dropdown
-   - Validate password match before submit
-   - `onSubmit()`: call `authService.register()`, on success navigate to `/login`
-
-4. **Implement `components/register/register.html`:**
-   - Form with all fields
-   - Department dropdown populated from API
-   - Password match validation error display
-   - Link back to login
-
-**Files to work on:**
-- `Frontend/.../components/login/login.ts`
-- `Frontend/.../components/login/login.html`
-- `Frontend/.../components/login/login.css`
-- `Frontend/.../components/register/register.ts`
-- `Frontend/.../components/register/register.html`
-- `Frontend/.../components/register/register.css`
-- Create: `Frontend/.../services/department.ts` (new service for department API calls)
+Add two new properties:
+- `jwt.secret` — a long random string (at least 32 characters) used to sign tokens. Example: `mySecretKeyForJWT1234567890abcdef`
+- `jwt.expiration` — token expiry in milliseconds. Set to `86400000` (that's 24 hours)
 
 ---
 
-### ✅ Day 17 — Navbar, Sidebar & App Routing
+### 📄 File 1 — Open `security/JwtService.java`
 
-**Goal:** Build the navigation shell and configure all app routes.
+- Annotate the class with `@Service` so Spring manages it as a bean
+- Read `jwt.secret` from properties using `@Value("${jwt.secret}")`
+- Read `jwt.expiration` from properties using `@Value("${jwt.expiration}")`
 
-**Tasks:**
+**Write method `generateToken(UserDetails userDetails)`:**
+- This method creates and returns a JWT token string
+- Use `Jwts.builder()` from the jjwt library to build the token
+- Set the subject to the user's username (their email)
+- Set the issued-at date to `new Date()`
+- Set the expiration to `new Date(System.currentTimeMillis() + expiration)`
+- Sign with `SignatureAlgorithm.HS256` using your secret key
+- Call `.compact()` at the end to get the final token string
 
-1. **Implement `components/navbar/navbar.ts`** — rename to `NavbarComponent`:
-   - Inject `AuthService`, `NotificationService`, `Router`
-   - `username` property set from localStorage
-   - `unreadCount` for notification badge — call `notificationService.getNotifications()` to count unread
-   - `logout()` method — calls `authService.logout()`, navigates to `/login`
+**Write method `extractUsername(String token)`:**
+- This reads the email from inside a token
+- Use `Jwts.parserBuilder()` to parse the token
+- Set the signing key and call `.parseClaimsJws(token).getBody().getSubject()`
+- Return the subject (which is the email)
 
-2. **Implement `components/navbar/navbar.html`:**
-   - App title/logo on the left
-   - On the right: notification bell with unread badge count, username display, logout button
-   - Use `*ngIf` to show only when logged in
+**Write method `isTokenValid(String token, UserDetails userDetails)`:**
+- Extract the username from the token
+- Check: is the extracted username equal to `userDetails.getUsername()`?
+- Check: is the token NOT expired? (compare expiration date to current date)
+- Return `true` only if both checks pass
 
-3. **Implement `components/sidebar/sidebar.ts`** — rename to `SidebarComponent`:
-   - Properties: `isAdmin` (checks if role is ADMIN), `isApprover` (role is APPROVER)
-   - Navigation links array with `{ label, route, icon, roles }` structure
-
-4. **Implement `components/sidebar/sidebar.html`:**
-   - Vertical nav links: Dashboard, My Documents, Upload Document, Pending Approvals, Notifications, Reports (admin only), Users (admin only)
-   - Use `routerLinkActive="active"` for active state highlighting
-
-5. **Configure `app.routes.ts`** with all application routes:
-   ```typescript
-   { path: '', redirectTo: 'login', pathMatch: 'full' },
-   { path: 'login', component: LoginComponent },
-   { path: 'register', component: RegisterComponent },
-   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
-   { path: 'documents', component: DocumentComponent, canActivate: [AuthGuard] },
-   { path: 'approvals', component: ApprovalComponent, canActivate: [AuthGuard] },
-   { path: 'notifications', component: NotificationComponent, canActivate: [AuthGuard] },
-   { path: 'profile', component: ProfileComponent, canActivate: [AuthGuard] },
-   { path: '**', redirectTo: 'login' }
-   ```
-
-6. **Update `app.html`** to include `<app-navbar>`, `<app-sidebar>`, and `<router-outlet>`.
-
-**Files to work on:**
-- `Frontend/.../components/navbar/navbar.ts` & `.html` & `.css`
-- `Frontend/.../components/sidebar/sidebar.ts` & `.html` & `.css`
-- `Frontend/.../src/app/app.routes.ts`
-- `Frontend/.../src/app/app.html`
-- `Frontend/.../src/app/app.ts`
+**Helper: `getSigningKey()`** — converts your `jwt.secret` string into a cryptographic `Key` object using `Keys.hmacShaKeyFor(secret.getBytes())`
 
 ---
 
-### ✅ Day 18 — Dashboard Component
+### 📄 File 2 — Open `security/CustomUserDetailsService.java`
 
-**Goal:** Build the main dashboard — the landing page after login with key stats.
+- Make the class `implement UserDetailsService` (from `org.springframework.security.core.userdetails`)
+- Annotate with `@Service`
+- Inject `UserRepository` using Lombok `@RequiredArgsConstructor` or `@Autowired`
 
-**Tasks:**
-
-1. **Implement `components/dashboard/dashboard.ts`** — rename to `DashboardComponent`:
-   - Inject `DocumentService`, `ApprovalService`, `NotificationService`, `AuthService`
-   - Properties: `totalDocuments`, `pendingDocuments`, `approvedDocuments`, `rejectedDocuments`, `recentDocuments: Document[]`, `pendingApprovals: Approval[]`
-   - `ngOnInit()`: load all data by calling services
-   - `isAdmin` computed property from `authService.getUserRole()`
-
-2. **Implement `components/dashboard/dashboard.html`:**
-   - Top stats cards row: "Total Documents", "Pending", "Approved", "Rejected" — each showing a count
-   - Section "Recent Documents" — table with last 5 documents showing title, status (with colored badge), date
-   - If `isAdmin`, show an additional "Pending Approvals" table
-   - Use `*ngFor` for lists and `[ngClass]` for status badge colors (green=approved, red=rejected, yellow=pending)
-
-3. **Implement `components/dashboard/dashboard.css`:**
-   - Stats card styles: white background, shadow, rounded corners, colored icon
-   - Status badge styles: color coded pill badges
-
-**Files to work on:**
-- `Frontend/.../components/dashboard/dashboard.ts`
-- `Frontend/.../components/dashboard/dashboard.html`
-- `Frontend/.../components/dashboard/dashboard.css`
+**Override method `loadUserByUsername(String email)`:**
+- This method is called by Spring Security when it needs to load a user
+- The parameter is named `username` but in our system it's actually the email
+- Use `userRepository.findByEmail(email)` to find the user
+- If not found, throw `UsernameNotFoundException` with a helpful message
+- If found, use `org.springframework.security.core.userdetails.User.builder()` to build and return a `UserDetails` object:
+  - `.username(user.getEmail())`
+  - `.password(user.getPassword())` — already hashed
+  - `.roles(user.getRole().getName())` — e.g., "ADMIN"
+  - `.build()`
 
 ---
 
-### ✅ Day 19 — Document Component (Upload & List)
+### 📄 File 3 — Open `security/JwtAuthenticationFilter.java`
 
-**Goal:** Build the document management page — upload documents and view the list.
+- Make the class `extend OncePerRequestFilter` (Spring ensures this runs exactly once per request)
+- Annotate with `@Component` so Spring detects it automatically
+- Inject `JwtService` and `CustomUserDetailsService`
 
-**Tasks:**
+**Override method `doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)`:**
 
-1. **Implement `components/document/document.ts`** — rename to `DocumentComponent`:
-   - Inject `DocumentService`, `AuthService`
-   - Properties: `documents: Document[]`, `showUploadForm: boolean`, `selectedFile: File | null`, `uploadForm: FormGroup`
-   - `ngOnInit()`: call `loadDocuments()`
-   - `loadDocuments()`: calls `documentService.getMyDocuments()` (or `getAllDocuments()` for admin)
-   - `onFileSelected(event: Event)`: extracts file from the input event, sets `selectedFile`
-   - `uploadDocument()`: creates `FormData`, calls `documentService.uploadDocument()`, reloads list on success
-   - `deleteDocument(id: number)`: confirms, calls service, removes from list
-   - `getStatusClass(status: string)`: returns CSS class string based on status
+Follow these steps inside the method:
+1. Read the `"Authorization"` header from the request: `request.getHeader("Authorization")`
+2. Check if the header is null OR doesn't start with `"Bearer "` — if so, just call `filterChain.doFilter(request, response)` and return (skip this filter for this request)
+3. Extract the token: take the header string and remove the first 7 characters (`"Bearer "`) using `.substring(7)`
+4. Use `jwtService.extractUsername(token)` to get the email from the token
+5. Check that the email is not null AND that `SecurityContextHolder.getContext().getAuthentication()` is null (meaning we haven't authenticated this request yet)
+6. If both checks pass, load the user: `userDetailsService.loadUserByUsername(email)`
+7. If `jwtService.isTokenValid(token, userDetails)` returns `true`:
+   - Create a `UsernamePasswordAuthenticationToken` with userDetails and their authorities
+   - Set it in the SecurityContext: `SecurityContextHolder.getContext().setAuthentication(authToken)`
+8. At the very end (always), call `filterChain.doFilter(request, response)` to continue the request chain
 
-2. **Implement `components/document/document.html`:**
-   - "Upload Document" button that toggles `showUploadForm`
-   - Upload form (shown when `showUploadForm` is true):
-     - Title input, Description textarea, File input (`accept=".pdf,.doc,.docx"`)
-     - Submit and Cancel buttons
-   - Documents table with columns: Title, Description, Status (badge), Upload Date, Actions (Download/Delete)
-   - Empty state message when no documents
-
-3. **`components/document/document.css`:** Style the upload form panel and table.
-
-**Files to work on:**
-- `Frontend/.../components/document/document.ts`
-- `Frontend/.../components/document/document.html`
-- `Frontend/.../components/document/document.css`
+**📂 Files worked on today:**
+- `pom.xml` (added 4 dependencies)
+- `application.properties` (added jwt.secret and jwt.expiration)
+- `security/JwtService.java`
+- `security/CustomUserDetailsService.java`
+- `security/JwtAuthenticationFilter.java`
 
 ---
 
-### ✅ Day 20 — Approval Component
+## ✅ Day 6 — Security Configuration & Exception Handling
 
-**Goal:** Build the approval management page for approvers to review and act on documents.
+### 🧠 What is SecurityConfig?
 
-**Tasks:**
+`SecurityConfig` is the central configuration class that tells Spring Security:
+- Which URLs are public (no login needed) vs protected (login required)
+- What authentication mechanism to use (JWT tokens in our case)
+- How to encode passwords (BCrypt hashing)
+- What CORS policy to apply (which origins can call our API)
 
-1. **Implement `components/approval/approval.ts`** — rename to `ApprovalComponent`:
-   - Inject `ApprovalService`, `AuthService`
-   - Properties: `pendingApprovals: Approval[]`, `selectedApproval: Approval | null`, `comments: string`
-   - `ngOnInit()`: call `approvalService.getPendingApprovals()`
-   - `openApprovalModal(approval: Approval)`: sets `selectedApproval` and shows modal
-   - `approve(documentId: number)`: calls `approvalService.processApproval()` with status `APPROVED`
-   - `reject(documentId: number)`: calls `approvalService.processApproval()` with status `REJECTED`
-   - After action: remove from list and show a success message
-
-2. **Implement `components/approval/approval.html`:**
-   - Table showing pending documents: Document Title, Submitted By, Submitted Date
-   - "Review" button per row that opens a modal
-   - Modal dialog showing document details, comments textarea, Approve (green) and Reject (red) buttons
-   - Empty state message for "No pending approvals"
-
-**Files to work on:**
-- `Frontend/.../components/approval/approval.ts`
-- `Frontend/.../components/approval/approval.html`
-- `Frontend/.../components/approval/approval.css`
+The `config/` folder is currently empty — you need to create `SecurityConfig.java` inside it.
 
 ---
 
-## Week 4 — Polish, Admin Features & Final Testing (Days 21–30)
+### 📄 File 1 — Create NEW `config/SecurityConfig.java`
+
+**Annotations on the class:**
+- `@Configuration` — tells Spring this is a configuration class
+- `@EnableWebSecurity` — enables Spring Security
+- `@EnableMethodSecurity` — allows using `@PreAuthorize` on individual methods later
+- `@RequiredArgsConstructor` (Lombok) — auto-injects final fields
+
+**Fields to inject (declare as `private final`):**
+- `JwtAuthenticationFilter jwtAuthFilter`
+- `CustomUserDetailsService userDetailsService`
+
+**Write a `SecurityFilterChain` bean method** (annotated with `@Bean`):
+- Disable CSRF: `.csrf(csrf -> csrf.disable())` — REST APIs don't need CSRF protection because they use tokens instead of cookies
+- Enable CORS: `.cors(cors -> cors.configurationSource(corsConfigurationSource()))` — refer to the CORS method below
+- Set session to stateless: `.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))` — we don't use server sessions, we use JWT tokens
+- Configure URL permissions:
+  - Permit all requests to `/api/auth/**` without authentication — this allows anyone to call register and login
+  - Require authentication for all other requests
+- Add your JWT filter BEFORE Spring's default `UsernamePasswordAuthenticationFilter`: use `.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)`
+- Return `http.build()`
+
+**Write a `BCryptPasswordEncoder` bean method:**
+- Annotate with `@Bean`
+- Return `new BCryptPasswordEncoder()`
+- BCrypt is a strong password hashing algorithm. We never store plain passwords.
+
+**Write an `AuthenticationManager` bean method:**
+- Annotate with `@Bean`
+- Accept `AuthenticationConfiguration config` as parameter
+- Return `config.getAuthenticationManager()`
+
+**Write a CORS configuration source method:**
+- Create a `CorsConfiguration` object
+- Set allowed origins: `List.of("http://localhost:4200")` — only allow the Angular app to call this API
+- Set allowed methods: `List.of("GET", "POST", "PUT", "DELETE", "OPTIONS")`
+- Set allowed headers: `List.of("*")` — allow all headers
+- Set `allowCredentials(true)`
+- Register this config for all paths `"/**"` using `UrlBasedCorsConfigurationSource`
+- Return the source
 
 ---
 
-### ✅ Day 21 — Notification Component & Profile Component
+### 📄 File 2 — Open `exception/ResourceNotFoundException.java`
 
-**Goal:** Build the notifications page and user profile/settings page.
-
-**Tasks:**
-
-1. **Implement `components/notification/notification.ts`** — rename to `NotificationComponent`:
-   - Inject `NotificationService`
-   - Properties: `notifications: Notification[]`, `unreadCount: number`
-   - `ngOnInit()`: load all notifications
-   - `markAsRead(id: number)`: calls service, updates local list
-   - `markAllAsRead()`: calls service, marks all as read in local list
-
-2. **Implement `components/notification/notification.html`:**
-   - "Mark All as Read" button (disabled if none unread)
-   - Notification list: each item shows message, timestamp, and unread indicator dot
-   - Unread items have a highlighted background; read items are normal
-   - `*ngFor` over notifications, `[ngClass]` for read/unread styling
-
-3. **Implement `components/profile/profile.ts`** — rename to `ProfileComponent`:
-   - Inject `UserService` (add `getUserById()` method in the service), `AuthService`
-   - Load current user's info on init
-   - Form for updating username/email
-   - `updateProfile()` method that calls user service
-
-4. **Implement `components/profile/profile.html`:**
-   - User avatar placeholder (initials-based circle)
-   - Display current role and department (read-only)
-   - Editable fields for username and email
-   - Save button
-
-**Files to work on:**
-- `Frontend/.../components/notification/notification.ts` & `.html` & `.css`
-- `Frontend/.../components/profile/profile.ts` & `.html` & `.css`
+- Make the class `extend RuntimeException`
+- Add a constructor that takes a `String message` parameter
+- Inside the constructor, call `super(message)` to pass the message to the parent class
+- Use this exception whenever something is NOT FOUND in the database (e.g., user not found, document not found)
+- Example: `throw new ResourceNotFoundException("Document not found with id: " + id)`
 
 ---
 
-### ✅ Day 22 — Admin Panel: User Management
+### 📄 File 3 — Open `exception/BadRequestException.java`
 
-**Goal:** Build the admin section for managing all users.
-
-**Tasks:**
-
-1. **Create a new component `src/app/components/admin/`** (the scaffold doesn't have this yet — create the folder and files):
-   - `admin.ts` — `AdminComponent`
-   - `admin.html`
-   - `admin.css`
-
-2. **Implement `AdminComponent`:**
-   - Inject `UserService` (add `getAllUsers()`, `deleteUser()` to the service if not done)
-   - Table of all users: Username, Email, Role, Department, Actions
-   - "Delete" button per row with a confirmation dialog
-   - "Change Role" button (bonus: inline dropdown to change role)
-
-3. **Add route for admin:** In `app.routes.ts`:
-   ```typescript
-   { path: 'admin', component: AdminComponent, canActivate: [AuthGuard, AdminGuard] }
-   ```
-
-4. **Add "Admin" link in `sidebar.html`** — visible only when `isAdmin` is true.
-
-**Files to work on:**
-- Create: `Frontend/.../components/admin/admin.ts`, `admin.html`, `admin.css`
-- `Frontend/.../src/app/app.routes.ts`
-- `Frontend/.../components/sidebar/sidebar.html`
+- Same pattern as above — extends `RuntimeException`
+- Constructor takes `String message`, calls `super(message)`
+- Use this when the user sends INVALID DATA (e.g., email already registered, password too short)
+- Example: `throw new BadRequestException("Email is already registered!")`
 
 ---
 
-### ✅ Day 23 — Document Status Workflow & Submit for Approval (UI)
+### 📄 File 4 — Open `exception/GlobalExceptionHandler.java`
 
-**Goal:** Complete the end-to-end approval flow visible from the UI — submit a document for approval directly.
+- Annotate the class with `@RestControllerAdvice` — this makes it handle exceptions from ALL controllers
+- Think of it as a central "catch block" for the whole application
 
-**Tasks:**
+**Write handler method for `ResourceNotFoundException`:**
+- Annotate with `@ExceptionHandler(ResourceNotFoundException.class)`
+- Return type: `ResponseEntity<Map<String, String>>`
+- Inside: return `ResponseEntity.status(404).body(Map.of("error", ex.getMessage()))`
 
-1. **Add "Submit for Approval" to `document.html`:**
-   - For documents in `DRAFT` or re-submit scenarios, add a "Submit for Approval" button
-   - In `document.ts`, add `submitForApproval(documentId: number)` method:
-     - Opens a small modal asking for the approver (dropdown of users with APPROVER role)
-     - Calls `approvalService.submitForApproval(documentId, approverEmail)`
-     - Reloads the document list
+**Write handler method for `BadRequestException`:**
+- Annotate with `@ExceptionHandler(BadRequestException.class)`
+- Return HTTP 400: `ResponseEntity.status(400).body(Map.of("error", ex.getMessage()))`
 
-2. **Add approver user fetching:**
-   - In `user.ts` service, add `getUsersByRole(role: string)` → GET `/api/users?role=ROLE`
-   - In `UserController.java` backend, add `?role` query parameter filter to the `getAllUsers()` endpoint
+**Write handler for `MethodArgumentNotValidException`** (for field validation errors):
+- Annotate with `@ExceptionHandler(MethodArgumentNotValidException.class)`
+- Loop through `ex.getBindingResult().getFieldErrors()` to collect all field error messages
+- Return HTTP 400 with a map of field names to error messages
 
-3. **Add document status badge color system** consistently across all components:
-   - `PENDING` → yellow/orange
-   - `APPROVED` → green
-   - `REJECTED` → red
-   - `DRAFT` → gray
-
-4. **Test full flow:** Upload → Submit for Approval → Approve/Reject → Check document status updated.
-
-**Files to work on:**
-- `Frontend/.../components/document/document.ts` & `.html`
-- `Frontend/.../services/user.ts`
-- `Backend/.../controller/UserController.java` (add role filter)
+**Write a generic handler for `Exception`:**
+- Annotate with `@ExceptionHandler(Exception.class)`
+- Return HTTP 500: `ResponseEntity.status(500).body(Map.of("error", "Something went wrong: " + ex.getMessage()))`
 
 ---
 
-### ✅ Day 24 — Reports Page
+### 📄 File 5 — Open `util/ValidationUtil.java`
 
-**Goal:** Build a basic reports/analytics page using data from the report API.
-
-**Tasks:**
-
-1. **Create `src/app/components/reports/`** (new — scaffold doesn't have it):
-   - `reports.ts`, `reports.html`, `reports.css`
-
-2. **Create `services/report.ts`** (new service):
-   - `getSummary()` → GET `/api/reports/summary`
-   - `getDocumentStatusBreakdown()` → GET `/api/reports/document-status`
-
-3. **Implement `ReportsComponent`:**
-   - Summary stats cards: Total Documents, Total Users, Total Departments, Approvals This Month
-   - Document status breakdown as a visual representation (even simple colored progress bars or a table is fine)
-   - Date range note (all-time stats)
-
-4. **Add route and sidebar link:**
-   - Route: `{ path: 'reports', component: ReportsComponent, canActivate: [AuthGuard, AdminGuard] }`
-   - Sidebar link (admin-only)
-
-**Files to work on:**
-- Create: `Frontend/.../components/reports/reports.ts`, `reports.html`, `reports.css`
-- Create: `Frontend/.../services/report.ts`
-- `Frontend/.../src/app/app.routes.ts`
-- `Frontend/.../components/sidebar/sidebar.html`
+- Create a `public static boolean isValidEmail(String email)` method
+- Use a regex pattern to validate email format
+- The pattern should check for: local part + `@` + domain + `.` + TLD
+- Use `Pattern.matches(regex, email)` to test it
+- Return `true` if valid, `false` if not
 
 ---
 
-### ✅ Day 25 — UI Styling & Responsiveness
+### 📄 File 6 — Open `util/FileUploadUtil.java`
 
-**Goal:** Polish the overall look and feel — consistent theme, spacing, and mobile responsiveness.
+- Create a `public static String saveFile(String uploadDir, String originalFilename, MultipartFile file)` method
+- Inside:
+  - Create a `Path` object pointing to the upload directory using `Paths.get(uploadDir)`
+  - Create the directory if it doesn't exist: `Files.createDirectories(uploadPath)`
+  - Build the destination path: `uploadPath.resolve(originalFilename)`
+  - Copy the file bytes: `Files.copy(file.getInputStream(), destPath, StandardCopyOption.REPLACE_EXISTING)`
+  - Return the file path as a string: `destPath.toString()`
+- This method will be called from `DocumentService` when a user uploads a file
 
-**Tasks:**
-
-1. **Define a global design system in `src/styles.css`:**
-   - CSS custom properties (variables):
-     ```css
-     :root {
-       --primary: #2563eb;
-       --success: #16a34a;
-       --danger: #dc2626;
-       --warning: #d97706;
-       --bg: #f8fafc;
-       --card-bg: #ffffff;
-       --text: #1e293b;
-       --border: #e2e8f0;
-     }
-     ```
-   - Base resets: box-sizing, font-family (use a Google Font like Inter or Roboto)
-   - Utility classes: `.badge`, `.btn`, `.btn-primary`, `.btn-danger`, `.card`
-
-2. **Style the app layout** in `app.css`:
-   - Sidebar fixed on the left (250px width)
-   - Main content area fills remaining space
-   - Navbar fixed at top
-
-3. **Make all components responsive:**
-   - Use CSS Grid or Flexbox for dashboard stats cards (wrap on small screens)
-   - Tables should scroll horizontally on mobile (`overflow-x: auto`)
-   - Sidebar should collapse to a hamburger menu on screens < 768px
-
-4. **Consistent component styling:**
-   - All tables: same header style, row hover effect
-   - All forms: same input focus styles, consistent spacing
-   - All buttons: consistent sizing, hover/focus states
-
-**Files to work on:**
-- `Frontend/.../src/styles.css`
-- `Frontend/.../src/app/app.css`
-- All individual component CSS files
+**📂 Files worked on today:**
+- `config/SecurityConfig.java` ← CREATED NEW
+- `exception/ResourceNotFoundException.java`
+- `exception/BadRequestException.java`
+- `exception/GlobalExceptionHandler.java`
+- `util/ValidationUtil.java`
+- `util/FileUploadUtil.java`
 
 ---
 
-### ✅ Day 26 — Form Validation & User Feedback
-
-**Goal:** Add proper validation messages and loading/success/error feedback throughout the app.
-
-**Tasks:**
-
-1. **Add a shared `AlertComponent` or use a simple alert service:**
-   - Create `src/app/shared/alert/alert.ts` and `alert.html`
-   - It shows a dismissible success (green) or error (red) message
-   - Expose via a simple `AlertService` with `showSuccess(msg)` and `showError(msg)` methods
-
-2. **Add validation to all forms:**
-   - `LoginComponent`: Show "Email is required", "Invalid email format", "Password is required"
-   - `RegisterComponent`: Show "Passwords do not match", "Username is required"
-   - `DocumentComponent` upload form: "Title is required", "File is required"
-   - `ApprovalComponent`: "Comments are required when rejecting"
-
-3. **Add loading spinners:**
-   - Each component that fetches data: show a spinner while `isLoading = true`
-   - Disable submit buttons while API calls are in-flight
-   - Add a simple CSS spinner or use Angular CDK
-
-4. **Handle empty states:**
-   - "No documents found" message with an upload CTA
-   - "No pending approvals" with an informational message
-   - "No notifications" message
-
-**Files to work on:**
-- Create: `Frontend/.../src/app/shared/alert/alert.ts` & `alert.html`
-- All component `.ts` and `.html` files (add validation and loading states)
+# 📅 WEEK 2 — Backend Services & REST APIs (Days 7–13)
 
 ---
 
-### ✅ Day 27 — File Download & Document Preview
+## ✅ Day 7 — Auth Service & Auth Controller (Register & Login)
 
-**Goal:** Allow users to download uploaded documents; add a basic preview for PDFs.
+### 🧠 How the Service + Controller Pattern Works
 
-**Tasks:**
+- **Controller** — receives the HTTP request, extracts data, calls the service
+- **Service** — contains the actual business logic (the rules and decisions)
+- **Controller never talks to the database directly** — it always goes through the service
+- **Service never knows about HTTP** — it just works with Java objects
 
-1. **Backend — Add file serving endpoint:**
-   In `DocumentController.java`, add:
-   ```
-   GET /api/documents/{id}/download
-   ```
-   - Read the file from `filePath` stored in the `Document` entity
-   - Return as `ResponseEntity<Resource>` with appropriate `Content-Type` and `Content-Disposition: attachment` headers
-   - Use `org.springframework.core.io.Resource` and `UrlResource`
+This separation makes the code organized and easy to test.
 
-2. **Backend — Add endpoint for viewing (inline):**
-   ```
-   GET /api/documents/{id}/view
-   ```
-   - Same as download but `Content-Disposition: inline` (browser opens instead of downloading)
+---
 
-3. **Frontend — Wire up download button:**
-   - In `DocumentService`, add `downloadDocument(id: number)` → calls the download endpoint and triggers browser download
-   - In `document.html`, "Download" button in the Actions column calls this method
+### 📄 First — Create NEW `repository/RoleRepository.java`
 
-4. **Frontend — Document detail modal (bonus):**
-   - Clicking the document title opens a modal
-   - Shows full document details (title, description, status, submitted by, history)
-   - For PDFs: embed an `<iframe>` pointing to the view endpoint
+This repository is needed by AuthService to find roles by name during registration.
 
-**Files to work on:**
+- Create an interface that extends `JpaRepository<Role, Long>`
+- Add one custom method: `Optional<Role> findByName(String name)` — used to find the role by name e.g. `findByName("USER")`
+
+---
+
+### 📄 Open `services/AuthService.java`
+
+- Annotate with `@Service`
+- Add `@RequiredArgsConstructor` (Lombok) to inject dependencies
+- Declare these as `private final` fields (Lombok auto-injects them):
+  - `UserRepository userRepository`
+  - `RoleRepository roleRepository`
+  - `BCryptPasswordEncoder passwordEncoder`
+  - `JwtService jwtService`
+  - `AuthenticationManager authManager`
+  - `CustomUserDetailsService userDetailsService`
+
+**Write method `register(RegisterRequest request)` — returns `Map<String, String>`:**
+
+Step 1 — Check if email is already taken:
+- Call `userRepository.existsByEmail(request.getEmail())`
+- If it returns `true`, throw `new BadRequestException("Email is already registered!")`
+
+Step 2 — Find the Role:
+- Call `roleRepository.findByName(request.getRoleName())`
+- If not found, throw `new BadRequestException("Role not found: " + request.getRoleName())`
+
+Step 3 — Create and save the User:
+- Create `new User()`
+- Set `username`, `email`, `role`, `createdAt`
+- For password: `user.setPassword(passwordEncoder.encode(request.getPassword()))` — NEVER save plain text passwords
+- Call `userRepository.save(user)`
+
+Step 4 — Return success:
+- Return `Map.of("message", "Registration successful!")`
+
+---
+
+**Write method `login(LoginRequest request)` — returns `Map<String, String>`:**
+
+Step 1 — Authenticate credentials:
+- Call `authManager.authenticate(new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()))`
+- If the credentials are wrong, Spring automatically throws `BadCredentialsException` — you don't need to handle this manually
+
+Step 2 — Load user details and generate token:
+- Call `userDetailsService.loadUserByUsername(request.getEmail())`
+- Call `jwtService.generateToken(userDetails)` to get the token string
+
+Step 3 — Get the user entity for role/username:
+- Call `userRepository.findByEmail(request.getEmail()).get()` to get the `User` entity
+
+Step 4 — Return token and user info:
+- Return `Map.of("token", token, "role", user.getRole().getName(), "username", user.getUsername())`
+
+---
+
+### 📄 Open `controller/AuthController.java`
+
+- Annotate with `@RestController` — combines `@Controller` + `@ResponseBody` (auto-converts return values to JSON)
+- Annotate with `@RequestMapping("/api/auth")` — all endpoints in this controller start with `/api/auth`
+- Inject `AuthService` using `@RequiredArgsConstructor`
+
+**Write endpoint `POST /api/auth/register`:**
+- Method annotation: `@PostMapping("/register")`
+- Parameter: `@RequestBody RegisterRequest request` — Spring reads the JSON body and converts it to the object
+- Call `authService.register(request)`
+- Return `ResponseEntity.ok(result)` — this sends HTTP 200 with the result as JSON
+
+**Write endpoint `POST /api/auth/login`:**
+- Method annotation: `@PostMapping("/login")`
+- Parameter: `@RequestBody LoginRequest request`
+- Call `authService.login(request)`
+- Return `ResponseEntity.ok(result)`
+
+**🧪 Test these endpoints in Postman:**
+1. POST `http://localhost:8080/api/auth/register`
+   - Body (JSON): `{ "username": "john", "email": "john@test.com", "password": "password123", "roleName": "USER" }`
+   - Expected: `{ "message": "Registration successful!" }`
+2. POST `http://localhost:8080/api/auth/login`
+   - Body (JSON): `{ "email": "john@test.com", "password": "password123" }`
+   - Expected: `{ "token": "eyJ...", "role": "USER", "username": "john" }`
+
+**📂 Files worked on today:**
+- `repository/RoleRepository.java` ← CREATED NEW
+- `services/AuthService.java`
+- `controller/AuthController.java`
+
+---
+
+## ✅ Day 8 — User Service & Controller
+
+**Goal:** Build APIs to get, update, and delete users. Admins use these.
+
+---
+
+### 📄 Open `services/UserService.java`
+
+- Annotate with `@Service` and add `@RequiredArgsConstructor`
+- Inject `UserRepository`
+
+**Write a private helper method `toUserResponse(User user)` — returns `UserResponse`:**
+- This converts a `User` entity (database object) into a `UserResponse` DTO (API response object)
+- Create a new `UserResponse` object
+- Set each field manually: `response.setId(user.getId())`, `response.setUsername(user.getUsername())`, etc.
+- For role: `user.getRole() != null ? user.getRole().getName() : ""` (null check in case role is not set)
+- For department: same null check pattern
+- Return the response object
+- **Why this method?** You'll call it in multiple places, so putting it in one place avoids code duplication
+
+**Write method `getAllUsers()` — returns `List<UserResponse>`:**
+- Call `userRepository.findAll()` — gets all users as a list
+- Use Java streams to convert each `User` to `UserResponse`:
+  - `.stream()` — converts list to a stream
+  - `.map(this::toUserResponse)` — applies your helper method to each user
+  - `.collect(Collectors.toList())` — collects results back into a list
+- Return the result
+
+**Write method `getUserById(Long id)` — returns `UserResponse`:**
+- Call `userRepository.findById(id)` — returns `Optional<User>`
+- If empty, throw `new ResourceNotFoundException("User not found with id: " + id)`
+- If found, call `toUserResponse(user)` and return it
+
+**Write method `updateUser(Long id, UserRequest request)` — returns `UserResponse`:**
+- Find user by id (throw exception if not found)
+- Update fields: `user.setUsername(request.getUsername())`, `user.setEmail(request.getEmail())`
+- Call `userRepository.save(user)` to persist changes
+- Return `toUserResponse(updatedUser)`
+
+**Write method `deleteUser(Long id)` — returns `void`:**
+- Find user by id (throw exception if not found)
+- Call `userRepository.deleteById(id)`
+
+---
+
+### 📄 Open `controller/UserController.java`
+
+- Annotate with `@RestController` and `@RequestMapping("/api/users")`
+- Inject `UserService`
+
+**Add these endpoints:**
+- `GET /api/users` — calls `userService.getAllUsers()`, returns `ResponseEntity<List<UserResponse>>`
+- `GET /api/users/{id}` — use `@PathVariable Long id`, calls `userService.getUserById(id)`
+- `PUT /api/users/{id}` — use `@PathVariable Long id` and `@RequestBody UserRequest request`, calls `userService.updateUser(id, request)`
+- `DELETE /api/users/{id}` — calls `userService.deleteUser(id)`, returns `ResponseEntity.noContent().build()` (HTTP 204)
+
+**📂 Files worked on today:**
+- `services/UserService.java`
+- `controller/UserController.java`
+
+---
+
+## ✅ Day 9 — Department Service & Controller
+
+**Goal:** Build CRUD (Create, Read, Update, Delete) for departments. The pattern here is the same as UserService — follow it closely.
+
+---
+
+### 📄 Open `services/DepartmentService.java`
+
+- Annotate with `@Service` and `@RequiredArgsConstructor`
+- Inject `DepartmentRepository`
+
+**Write these 5 methods:**
+
+`getAllDepartments()` — returns `List<Department>`
+- Call `departmentRepository.findAll()` and return the result
+
+`getDepartmentById(Long id)` — returns `Department`
+- Use `departmentRepository.findById(id)`, throw `ResourceNotFoundException` if empty
+
+`createDepartment(DepartmentRequest request)` — returns `Department`
+- Create `new Department()`
+- Set `name` and `description` from the request
+- Call `departmentRepository.save(department)` and return saved result
+
+`updateDepartment(Long id, DepartmentRequest request)` — returns `Department`
+- Find existing department by id (throw exception if not found)
+- Update its `name` and `description`
+- Save and return
+
+`deleteDepartment(Long id)` — returns `void`
+- Confirm the department exists (find by id first)
+- Call `departmentRepository.deleteById(id)`
+
+---
+
+### 📄 Open `controller/DepartmentController.java`
+
+- Annotate with `@RestController` and `@RequestMapping("/api/departments")`
+- Inject `DepartmentService`
+
+**Add these 5 endpoints:**
+- `GET /api/departments` — returns all departments
+- `GET /api/departments/{id}` — returns one department by id
+- `POST /api/departments` — creates a new department, use `@RequestBody DepartmentRequest`
+- `PUT /api/departments/{id}` — updates an existing department
+- `DELETE /api/departments/{id}` — deletes a department, returns HTTP 204
+
+**📂 Files worked on today:**
+- `services/DepartmentService.java`
+- `controller/DepartmentController.java`
+
+---
+
+## ✅ Day 10 — Document Service & Controller (Upload & Fetch)
+
+**Goal:** Implement document uploading and retrieval — the core feature of the whole system.
+
+---
+
+**Add to `application.properties`:**
+- `file.upload.dir=uploads/` — this is where uploaded files will be stored on the server
+
+---
+
+### 📄 Open `services/DocumentService.java`
+
+- Annotate with `@Service` and `@RequiredArgsConstructor`
+- Inject: `DocumentRepository`, `UserRepository`
+- Read `file.upload.dir` property using `@Value("${file.upload.dir}")`
+
+**Write private helper method `toDocumentResponse(Document doc)` — returns `DocumentResponse`:**
+- Similar to the User helper — manually map each field from entity to DTO
+- For `uploadedByUsername`: `doc.getUploadedBy().getUsername()`
+- For `createdAt`: convert `LocalDateTime` to a readable string using `.toString()`
+
+**Write method `uploadDocument(DocumentRequest request, MultipartFile file, String uploaderEmail)` — returns `DocumentResponse`:**
+
+Step 1 — Find who is uploading:
+- `userRepository.findByEmail(uploaderEmail)` — throw `ResourceNotFoundException` if not found
+
+Step 2 — Save the file to disk:
+- Call `FileUploadUtil.saveFile(uploadDir, file.getOriginalFilename(), file)` — this returns the saved file path
+- Wrap in try-catch for `IOException`
+
+Step 3 — Create and save the Document entity:
+- Create `new Document()`, set all fields including `uploadedBy`, `status = DocumentStatus.PENDING`
+- Call `documentRepository.save(document)`
+
+Step 4 — Return as DTO:
+- Call and return `toDocumentResponse(savedDocument)`
+
+**Write method `getAllDocuments()` — returns `List<DocumentResponse>`:**
+- `documentRepository.findAll()` → stream → map to response → collect
+
+**Write method `getDocumentsByUser(String email)` — returns `List<DocumentResponse>`:**
+- Find user by email
+- `documentRepository.findByUploadedBy(user)` → stream → map → collect
+
+**Write method `getDocumentById(Long id)` — returns `DocumentResponse`:**
+- Find by id, throw exception if not found, return as response DTO
+
+**Write method `getDocumentsByStatus(String status)` — returns `List<DocumentResponse>`:**
+- Convert the status string to enum: `DocumentStatus.valueOf(status.toUpperCase())`
+- `documentRepository.findByStatus(documentStatus)` → map → return
+
+**Write method `deleteDocument(Long id)` — returns `void`:**
+- Find by id (throw exception if not found), then delete
+
+---
+
+### 📄 Open `controller/DocumentController.java`
+
+- Annotate with `@RestController`, `@RequestMapping("/api/documents")`
+- Inject `DocumentService`
+
+**Add these endpoints:**
+
+`POST /api/documents/upload` — file upload endpoint:
+- Use `@PostMapping("/upload")`
+- Parameters: `@RequestPart("data") DocumentRequest request` and `@RequestPart("file") MultipartFile file` and `@AuthenticationPrincipal UserDetails userDetails`
+- `@AuthenticationPrincipal` automatically injects the currently logged-in user's details (extracted from the JWT token by the filter)
+- Pass `userDetails.getUsername()` as the uploader email to the service
+
+`GET /api/documents` — all documents (admin):
+- Returns `List<DocumentResponse>`
+
+`GET /api/documents/my` — current user's documents:
+- Use `@AuthenticationPrincipal UserDetails userDetails`
+- Pass email to `documentService.getDocumentsByUser()`
+
+`GET /api/documents/{id}` — single document:
+- Use `@PathVariable Long id`
+
+`GET /api/documents/status/{status}` — filter by status:
+- Use `@PathVariable String status`
+
+`DELETE /api/documents/{id}` — delete a document:
+- Returns `ResponseEntity.noContent().build()` on success
+
+**📂 Files worked on today:**
+- `services/DocumentService.java`
+- `controller/DocumentController.java`
+
+---
+
+## ✅ Day 11 — Approval Service & Controller
+
+**Goal:** Implement the approve/reject workflow — the most business-critical logic in the system.
+
+---
+
+### 📄 Open `services/ApprovalService.java`
+
+- Annotate with `@Service` and `@RequiredArgsConstructor`
+- Inject: `ApprovalRepository`, `DocumentRepository`, `UserRepository`, `NotificationService`
+
+**Write method `submitForApproval(Long documentId, String approverEmail)` — returns `Approval`:**
+
+Step 1 — Find the document:
+- Use `documentRepository.findById(documentId)`, throw exception if not found
+
+Step 2 — Find the approver:
+- Use `userRepository.findByEmail(approverEmail)`, throw exception if not found
+
+Step 3 — Update document status:
+- Set `document.setStatus(DocumentStatus.PENDING)`
+- Save the document
+
+Step 4 — Create an Approval record:
+- Create `new Approval()`
+- Set document, approver, status = `DocumentStatus.PENDING`, actionDate = now
+
+Step 5 — Notify the approver:
+- Call `notificationService.createNotification(approver, "You have a new document to review: " + document.getTitle())`
+
+Step 6 — Save and return the approval
+
+---
+
+**Write method `processApproval(ApprovalRequest request, String approverEmail)` — returns `Approval`:**
+
+Step 1 — Find the approver and document (throw exceptions if not found)
+
+Step 2 — Find the existing Approval record:
+- Use `approvalRepository.findByDocumentAndApprover(document, approver)`
+- If not found, throw `ResourceNotFoundException`
+
+Step 3 — Update the Approval:
+- Set status to the requested value: `DocumentStatus.valueOf(request.getStatus())`
+- Set comments: `approval.setComments(request.getComments())`
+- Set actionDate: `LocalDateTime.now()`
+
+Step 4 — Update the Document status to match:
+- `document.setStatus(DocumentStatus.valueOf(request.getStatus()))`
+- Save the document
+
+Step 5 — Notify the document uploader:
+- `notificationService.createNotification(document.getUploadedBy(), "Your document '" + document.getTitle() + "' was " + request.getStatus())`
+
+Step 6 — Save the approval and return it
+
+---
+
+**Write method `getPendingApprovalsByApprover(String approverEmail)` — returns `List<Approval>`:**
+- Find approver by email
+- Return `approvalRepository.findByApprover(approver)`
+- Filter the result to only return approvals where `status == DocumentStatus.PENDING`
+
+**Write method `getApprovalHistoryForDocument(Long documentId)` — returns `List<Approval>`:**
+- Find document by id
+- Return `approvalRepository.findByDocument(document)`
+
+---
+
+### 📄 Open `controller/ApprovalController.java`
+
+- `@RestController`, `@RequestMapping("/api/approvals")`
+- Inject `ApprovalService`
+
+**Add these endpoints:**
+- `POST /api/approvals/submit` — accepts `documentId` and `approverEmail` as request params or body, calls `submitForApproval`
+- `POST /api/approvals/process` — accepts `@RequestBody ApprovalRequest`, uses `@AuthenticationPrincipal` for approver email
+- `GET /api/approvals/pending` — uses `@AuthenticationPrincipal` to get current approver's email
+- `GET /api/approvals/document/{documentId}` — returns approval history
+
+**📂 Files worked on today:**
+- `services/ApprovalService.java`
+- `controller/ApprovalController.java`
+
+---
+
+## ✅ Day 12 — Notification Service, Report Service & Admin Controller
+
+### 📄 Open `services/NotificationService.java`
+
+- `@Service`, `@RequiredArgsConstructor`
+- Inject: `NotificationRepository`, `UserRepository`
+
+**Write method `createNotification(User user, String message)` — called internally, no return needed:**
+- Create `new Notification()`
+- Set user, message, `isRead = false`, `createdAt = LocalDateTime.now()`
+- Save using `notificationRepository.save(notification)`
+
+**Write method `getUserNotifications(String email)` — returns `List<NotificationResponse>`:**
+- Find user by email
+- `notificationRepository.findByUser(user)` → stream → convert each to `NotificationResponse` DTO → collect
+
+**Write method `getUnreadNotifications(String email)` — returns `List<NotificationResponse>`:**
+- Find user by email
+- Use `notificationRepository.findByUserAndIsReadFalse(user)` → convert → return
+
+**Write method `markAsRead(Long notificationId)` — returns `void`:**
+- Find notification by id (throw exception if not found)
+- `notification.setRead(true)`
+- Save the notification
+
+**Write method `markAllAsRead(String email)` — returns `void`:**
+- Find user by email
+- Get all unread: `notificationRepository.findByUserAndIsReadFalse(user)`
+- Loop through each and set `isRead = true`
+- Save all using `notificationRepository.saveAll(notifications)`
+
+---
+
+### 📄 Open `controller/NotificationController.java`
+
+- `@RestController`, `@RequestMapping("/api/notifications")`
+- Inject `NotificationService`
+- Use `@AuthenticationPrincipal` to get the current user's email in each method
+
+**Endpoints:**
+- `GET /api/notifications` — returns all notifications for current user
+- `GET /api/notifications/unread` — returns only unread notifications
+- `PUT /api/notifications/{id}/read` — marks one notification as read using `@PathVariable Long id`
+- `PUT /api/notifications/read-all` — marks all as read for current user
+
+---
+
+### 📄 Open `services/ReportService.java`
+
+- `@Service`, `@RequiredArgsConstructor`
+- Inject: `DocumentRepository`, `UserRepository`
+
+**Write method `getSummaryReport()` — returns `Map<String, Object>`:**
+- Build a map with these key-value pairs:
+  - `"totalDocuments"` → `documentRepository.count()`
+  - `"totalUsers"` → `userRepository.count()`
+  - `"pendingDocuments"` → `documentRepository.findByStatus(DocumentStatus.PENDING).size()`
+  - `"approvedDocuments"` → `documentRepository.findByStatus(DocumentStatus.APPROVED).size()`
+  - `"rejectedDocuments"` → `documentRepository.findByStatus(DocumentStatus.REJECTED).size()`
+- Return the map
+
+---
+
+### 📄 Open `controller/ReportController.java`
+
+- `@RestController`, `@RequestMapping("/api/reports")`
+- Add: `GET /api/reports/summary` — calls `reportService.getSummaryReport()`
+
+---
+
+### 📄 Open `controller/AdminController.java`
+
+- `@RestController`, `@RequestMapping("/api/admin")`
+- Inject `UserService` and `ReportService`
+- Add: `GET /api/admin/users` — returns all users
+- Add: `GET /api/admin/dashboard-stats` — returns the summary report
+- Add `@PreAuthorize("hasRole('ADMIN')")` on the class (or each method) to restrict access to admins only
+
+**📂 Files worked on today:**
+- `services/NotificationService.java`
+- `controller/NotificationController.java`
+- `services/ReportService.java`
+- `controller/ReportController.java`
+- `controller/AdminController.java`
+
+---
+
+## ✅ Day 13 — Test All Backend APIs End-to-End
+
+**Goal:** Before starting the frontend, make absolutely sure every backend API works correctly.
+
+Open Postman and test these scenarios in order:
+
+**Step 1 — Register & Login:**
+- Register 3 users: one with role ADMIN, one with USER, one with APPROVER
+- Login with each and save their tokens
+
+**Step 2 — Document Upload (use USER's token in headers):**
+- Upload a PDF or Word document using the `/api/documents/upload` endpoint
+- Verify the file is saved in the `uploads/` folder on your computer
+- Check the document appears in the database
+
+**Step 3 — Approval Flow:**
+- Submit the uploaded document for approval (assign to the APPROVER user)
+- Login as APPROVER, call `/api/approvals/pending` — verify the document appears
+- Process the approval with status "APPROVED" and some comments
+- Check the document status changed to APPROVED in the database
+
+**Step 4 — Notifications:**
+- After approval, check notifications for the USER — they should have a notification "Your document was APPROVED"
+- Mark it as read
+- Call unread endpoint again — should return empty now
+
+**Step 5 — Reports (use ADMIN's token):**
+- Call `/api/reports/summary` — check the counts are correct
+
+**Common issues to check:**
+- If you get `403 Forbidden`: the route needs to be permitted in `SecurityConfig.java` or you forgot to add the token header
+- If you get `401 Unauthorized`: token is invalid or expired — login again to get a fresh token
+- If file upload fails: check the `uploads/` directory exists and has write permissions
+
+**📂 Files worked on today:**
+- Any files that have bugs found during testing
+
+---
+
+# 📅 WEEK 3 — Angular Frontend (Days 14–20)
+
+---
+
+## ✅ Day 14 — TypeScript Models & Angular Services
+
+### 🧠 What is a TypeScript Interface?
+
+A TypeScript interface defines the "shape" of a data object. It tells the compiler what fields to expect. This helps catch mistakes early.
+
+Example: If the backend sends `{ id: 1, title: "Report" }` and you try to access `.name`, TypeScript will show a compile error because the interface only has `title`.
+
+### 🧠 What is an Angular Service?
+
+An Angular service is a class with `@Injectable` that can be shared across multiple components. Services hold the HTTP request logic — components should NEVER call `HttpClient` directly.
+
+Pattern: Component → calls Service method → Service sends HTTP request → gets response → Component uses the response data
+
+---
+
+### 📄 Open `models/user.ts`
+
+Export these TypeScript interfaces:
+- `User` — with fields: `id: number`, `username: string`, `email: string`, `role: string`, `department: string`
+- `LoginRequest` — with fields: `email: string`, `password: string`
+- `RegisterRequest` — with fields: `username: string`, `email: string`, `password: string`, `roleName: string`, `departmentId?: number`
+- `AuthResponse` — with fields: `token: string`, `role: string`, `username: string`
+
+### 📄 Open `models/document.ts`
+
+Export:
+- `Document` — fields: `id`, `title`, `description`, `status`, `uploadedByUsername`, `filePath`, `createdAt`
+- `DocumentRequest` — fields: `title: string`, `description: string`
+
+### 📄 Open `models/approval.ts`
+
+Export:
+- `Approval` — fields: `id`, `documentId`, `approverUsername`, `status`, `comments`, `actionDate`
+- `ApprovalRequest` — fields: `documentId: number`, `status: string`, `comments: string`
+
+### 📄 Open `models/notification.ts`
+
+Export:
+- `Notification` — fields: `id: number`, `message: string`, `isRead: boolean`, `createdAt: string`
+
+---
+
+### 📄 Open `services/auth.ts` — rename the class to `AuthService`
+
+- Keep `@Injectable({ providedIn: 'root' })` — this means there is one shared instance across the whole app
+- Inject `HttpClient` in the constructor: `constructor(private http: HttpClient) {}`
+- Define `private apiUrl = 'http://localhost:8080/api/auth'`
+
+**Write these methods:**
+
+`login(email: string, password: string): Observable<AuthResponse>`
+- Return `this.http.post<AuthResponse>(\`${this.apiUrl}/login\`, { email, password })`
+
+`register(data: RegisterRequest): Observable<any>`
+- Return `this.http.post(\`${this.apiUrl}/register\`, data)`
+
+`saveToken(token: string, role: string, username: string): void`
+- Use `localStorage.setItem()` to save all three values separately
+
+`getToken(): string | null`
+- Return `localStorage.getItem('token')`
+
+`isLoggedIn(): boolean`
+- Return `!!this.getToken()` — `!!` converts a value to boolean (non-empty string = true)
+
+`getUserRole(): string`
+- Return `localStorage.getItem('role') || ''`
+
+`getUsername(): string`
+- Return `localStorage.getItem('username') || ''`
+
+`logout(): void`
+- Call `localStorage.clear()` — removes token and all saved user info
+
+---
+
+### 📄 Open `services/document.ts` — rename class to `DocumentService`
+
+- `private apiUrl = 'http://localhost:8080/api/documents'`
+
+**Write these methods:**
+
+`uploadDocument(title: string, description: string, file: File): Observable<Document>`
+- Create `const formData = new FormData()`
+- Add the JSON data part: `formData.append('data', new Blob([JSON.stringify({ title, description })], { type: 'application/json' }))`
+- Add the file: `formData.append('file', file, file.name)`
+- Return `this.http.post<Document>(\`${this.apiUrl}/upload\`, formData)`
+
+`getMyDocuments(): Observable<Document[]>`
+- Return `this.http.get<Document[]>(\`${this.apiUrl}/my\`)`
+
+`getAllDocuments(): Observable<Document[]>`
+- Return `this.http.get<Document[]>(this.apiUrl)`
+
+`deleteDocument(id: number): Observable<any>`
+- Return `this.http.delete(\`${this.apiUrl}/${id}\`)`
+
+---
+
+### 📄 Open `services/approval.ts` — rename to `ApprovalService`
+
+- `private apiUrl = 'http://localhost:8080/api/approvals'`
+- Write: `getPendingApprovals()`, `processApproval(request: ApprovalRequest)`, `submitForApproval(documentId: number, approverEmail: string)`
+- Each method makes the appropriate HTTP call (GET or POST) to the matching endpoint
+
+### 📄 Open `services/notification.ts` — rename to `NotificationService`
+
+- `private apiUrl = 'http://localhost:8080/api/notifications'`
+- Write: `getNotifications()`, `markAsRead(id: number)`, `markAllAsRead()`
+
+### 📄 Create NEW `src/environments/environment.ts`
+
+- Export `const environment = { apiUrl: 'http://localhost:8080' }`
+- This is a good practice — if you change the backend URL, you only change it in one place
+
+**📂 Files worked on today:**
+- `models/user.ts`, `models/document.ts`, `models/approval.ts`, `models/notification.ts`
+- `services/auth.ts`, `services/document.ts`, `services/approval.ts`, `services/notification.ts`
+- `src/environments/environment.ts` ← CREATED NEW
+
+---
+
+## ✅ Day 15 — HTTP Interceptors & Route Guards
+
+### 🧠 What is an HTTP Interceptor?
+
+An interceptor is a function that runs automatically on EVERY HTTP request (outgoing) or every HTTP response (incoming). You register it once and it applies everywhere — you don't need to add the token manually in every service.
+
+Two interceptors in this project:
+- `auth-interceptor` — OUTGOING: adds JWT token to request header
+- `error-interceptor` — INCOMING: handles error responses globally
+
+### 🧠 What is a Route Guard?
+
+A route guard runs before a route loads and can BLOCK access. Angular calls it and checks the return value:
+- Returns `true` → allow access to the page
+- Returns `false` → block access, usually redirect to login
+
+Three guards in this project:
+- `auth-guard` — is the user logged in?
+- `admin-guard` — is the user an admin?
+- `role-guard` — does the user have the required role?
+
+---
+
+### 📄 Open `interceptors/auth-interceptor.ts`
+
+- The file exports an `HttpInterceptorFn` function
+- Inside the function, use `inject(AuthService)` to get the auth service
+- Call `authService.getToken()` to get the current token
+- If token exists:
+  - Clone the request and add the header: `req.clone({ setHeaders: { Authorization: \`Bearer ${token}\` } })`
+  - Pass the cloned request to `next(clonedReq)`
+- If token doesn't exist: pass the original request unchanged: `next(req)`
+
+---
+
+### 📄 Open `interceptors/error-interceptor.ts`
+
+- Exports an `HttpInterceptorFn`
+- Use `inject(Router)` and `inject(AuthService)`
+- Call `next(req)` and pipe the result with `catchError((error: HttpErrorResponse) => { ... })`
+- Inside catchError:
+  - If `error.status === 401` — logout and navigate to `/login`
+  - If `error.status === 403` — navigate to dashboard or show alert
+  - For all errors — `return throwError(() => error)` to propagate the error to the component
+
+---
+
+### 📄 Open `guards/auth-guard.ts`
+
+- Export a `CanActivateFn` function
+- Inside, use `inject(AuthService)` and `inject(Router)`
+- If `authService.isLoggedIn()` is `true` → return `true`
+- If `false` → call `router.navigate(['/login'])` and return `false`
+
+### 📄 Open `guards/admin-guard.ts`
+
+- Same pattern as auth-guard
+- Check `authService.getUserRole() === 'ADMIN'`
+- If not admin → navigate to `/dashboard` and return `false`
+
+### 📄 Open `guards/role-guard.ts`
+
+- More flexible guard — check a list of allowed roles
+- Use `inject(ActivatedRouteSnapshot)` — read `route.data['roles']` which is an array of allowed role names
+- Check if `authService.getUserRole()` is included in that array
+- Return `true` if yes, redirect and return `false` if no
+
+---
+
+### 📄 Update `app.config.ts`
+
+- Add `provideRouter(routes)` — registers the routes
+- Add `provideHttpClient(withInterceptors([authInterceptor, errorInterceptor]))` — registers both interceptors
+
+**📂 Files worked on today:**
+- `interceptors/auth-interceptor.ts`
+- `interceptors/error-interceptor.ts`
+- `guards/auth-guard.ts`
+- `guards/admin-guard.ts`
+- `guards/role-guard.ts`
+- `app.config.ts`
+
+---
+
+## ✅ Day 16 — Login Page Component
+
+### 🧠 Angular Standalone Components
+
+Since Angular v15+, components can be standalone — meaning they don't need an `AppModule`. Each component declares its own imports directly in the `@Component` decorator's `imports: []` array.
+
+**Common imports you'll need:**
+- `FormsModule` — for `[(ngModel)]` two-way data binding in forms
+- `CommonModule` — for `*ngIf` and `*ngFor` directives
+- `RouterModule` — for `routerLink` navigation in templates
+
+---
+
+### 📄 Open `components/login/login.ts` — rename class to `LoginComponent`
+
+**In the `@Component` decorator:**
+- Set `standalone: true`
+- Add to `imports`: `FormsModule`, `CommonModule`, `RouterModule`
+- Keep `templateUrl` and `styleUrl` as they are
+
+**Add these class properties:**
+- `email = ''` — bound to the email input field
+- `password = ''` — bound to the password input field
+- `errorMessage = ''` — shown when login fails
+- `isLoading = false` — used to disable the button while loading
+
+**Inject in constructor:** `private authService: AuthService` and `private router: Router`
+
+**Write method `onSubmit()`:**
+
+Step 1 — Start loading:
+- Set `isLoading = true` and `errorMessage = ''`
+
+Step 2 — Call the login service:
+- Call `this.authService.login(this.email, this.password)`
+- Use `.subscribe({ next: ..., error: ... })` to handle the response
+
+Step 3 — On success (`next` callback):
+- Call `this.authService.saveToken(res.token, res.role, res.username)`
+- Navigate to dashboard: `this.router.navigate(['/dashboard'])`
+
+Step 4 — On error (`error` callback):
+- Set `this.errorMessage = 'Invalid email or password. Please try again.'`
+- Set `this.isLoading = false`
+
+---
+
+### 📄 Open `components/login/login.html`
+
+**Structure the page as a centered login card:**
+
+1. Outer div `class="login-page"` — fills the full viewport
+2. Inner div `class="login-card"` — centered white box
+
+**Inside the card:**
+- App title heading: `<h2>📄 Document Approval System</h2>`
+- Subheading: `<h3>Login</h3>`
+- Error message div — only show it when `errorMessage` is not empty:
+  - Use `*ngIf="errorMessage"` on the div
+  - Display `{{ errorMessage }}` inside
+  - Style it with red color
+- A form with `(ngSubmit)="onSubmit()"`:
+  - Email input: `type="email"`, `[(ngModel)]="email"`, `name="email"`, `required`, placeholder text
+  - Password input: `type="password"`, `[(ngModel)]="password"`, `name="password"`, `required`, placeholder text
+  - Submit button: `type="submit"`, `[disabled]="isLoading"`, text changes with `{{ isLoading ? 'Logging in...' : 'Login' }}`
+- Register link at the bottom: `<a routerLink="/register">Don't have an account? Register here</a>`
+
+---
+
+### 📄 Open `components/login/login.css`
+
+Write styles for:
+- `.login-page` — full screen height, flexbox to center content
+- `.login-card` — white background, padding, rounded corners, shadow, fixed max-width (e.g. 400px)
+- Input fields — full width, padding, border, rounded corners, focus style
+- Submit button — full width, blue background, white text, padding
+- Error div — red text or red background with padding
+- Register link — centered, smaller font
+
+**📂 Files worked on today:**
+- `components/login/login.ts`
+- `components/login/login.html`
+- `components/login/login.css`
+
+---
+
+## ✅ Day 17 — Register Page Component
+
+**Goal:** Build the register form. This is very similar to the login page — follow the same patterns.
+
+---
+
+### 📄 Open `components/register/register.ts` — rename to `RegisterComponent`
+
+**Add properties:**
+- `username`, `email`, `password`, `confirmPassword` — all strings, start as `''`
+- `roleName = 'USER'` — default role, could be a dropdown later
+- `errorMessage = ''`
+- `successMessage = ''`
+- `isLoading = false`
+
+**Inject:** `AuthService`, `Router`
+
+**Write method `onSubmit()`:**
+
+Step 1 — Validate passwords match:
+- Check `this.password !== this.confirmPassword`
+- If they don't match, set `this.errorMessage = 'Passwords do not match!'` and return early
+
+Step 2 — Build the request object:
+- Create `const data: RegisterRequest = { username, email, password, roleName }`
+
+Step 3 — Call `authService.register(data)`:
+- On success: set `successMessage = 'Registration successful! Please login.'`, then navigate to `/login` after 2 seconds using `setTimeout(() => this.router.navigate(['/login']), 2000)`
+- On error: extract the error message from `error.error.error` (or similar) and set `errorMessage`
+
+---
+
+### 📄 Open `components/register/register.html`
+
+Build a form card similar to the login card:
+- Username input — `[(ngModel)]="username"`, `name="username"`
+- Email input — `type="email"`, `[(ngModel)]="email"`
+- Password input — `[(ngModel)]="password"`
+- Confirm Password input — `[(ngModel)]="confirmPassword"`
+- Password mismatch error message — shown with `*ngIf="password && confirmPassword && password !== confirmPassword"`
+- Success message div — shown when `successMessage` is not empty
+- Error message div — shown when `errorMessage` is not empty
+- Submit button with loading state
+- Link back to login: `Already have an account? <a routerLink="/login">Login here</a>`
+
+**📂 Files worked on today:**
+- `components/register/register.ts`
+- `components/register/register.html`
+- `components/register/register.css`
+
+---
+
+## ✅ Day 18 — Navbar, Sidebar & App Routing
+
+**Goal:** Set up the navigation shell that wraps all pages, and configure routing so clicking links works.
+
+---
+
+### 📄 Open `components/navbar/navbar.ts` — rename to `NavbarComponent`
+
+- Inject: `AuthService`, `Router`
+- Add property `username = this.authService.getUsername()` — shows the logged-in user's name
+- Write method `logout()`:
+  - Call `this.authService.logout()`
+  - Navigate to `/login`
+
+### 📄 Open `components/navbar/navbar.html`
+
+Create a top navigation bar `<nav>`:
+- Left side: app name/logo
+- Right side:
+  - Welcome message: `Welcome, {{ username }}`
+  - Logout button that calls `(click)="logout()"`
+
+### 📄 Open `components/sidebar/sidebar.ts` — rename to `SidebarComponent`
+
+- Inject `AuthService`
+- Add property `isAdmin = this.authService.getUserRole() === 'ADMIN'`
+- Add property `isApprover = this.authService.getUserRole() === 'APPROVER'`
+
+### 📄 Open `components/sidebar/sidebar.html`
+
+Create a vertical `<div class="sidebar">` with navigation links:
+- Always visible: `<a routerLink="/dashboard">🏠 Dashboard</a>`
+- Always visible: `<a routerLink="/documents">📄 My Documents</a>`
+- For approvers: `<a routerLink="/approvals" *ngIf="isApprover || isAdmin">✅ Approvals</a>`
+- Always visible: `<a routerLink="/notifications">🔔 Notifications</a>`
+- Always visible: `<a routerLink="/profile">👤 My Profile</a>`
+- Admin only: `<a routerLink="/admin" *ngIf="isAdmin">⚙️ Admin Panel</a>`
+- Add `routerLinkActive="active"` to each link so the current page's link is highlighted
+
+---
+
+### 📄 Open `app.routes.ts`
+
+Import all component classes and define the routes array:
+- `{ path: '', redirectTo: 'login', pathMatch: 'full' }` — redirect root URL to login
+- `{ path: 'login', component: LoginComponent }` — public page
+- `{ path: 'register', component: RegisterComponent }` — public page
+- `{ path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] }` — requires login
+- `{ path: 'documents', component: DocumentComponent, canActivate: [authGuard] }` — requires login
+- `{ path: 'approvals', component: ApprovalComponent, canActivate: [authGuard] }` — requires login
+- `{ path: 'notifications', component: NotificationComponent, canActivate: [authGuard] }` — requires login
+- `{ path: 'profile', component: ProfileComponent, canActivate: [authGuard] }` — requires login
+- `{ path: '**', redirectTo: 'login' }` — unknown URLs redirect to login
+
+### 📄 Open `app.html`
+
+Replace the default content with the application layout:
+- Add `<app-navbar>` at the top
+- Create a `<div class="app-layout">` containing:
+  - `<app-sidebar>` on the left
+  - `<div class="main-content"><router-outlet></router-outlet></div>` on the right
+- `<router-outlet>` is where Angular inserts the current page's component
+
+### 📄 Open `app.ts`
+
+- Add `NavbarComponent` and `SidebarComponent` to the `imports` array of the app component
+- Add `RouterOutlet` to imports
+
+**📂 Files worked on today:**
+- `components/navbar/navbar.ts` & `.html` & `.css`
+- `components/sidebar/sidebar.ts` & `.html` & `.css`
+- `app.routes.ts`
+- `app.html`
+- `app.ts`
+
+---
+
+## ✅ Day 19 — Dashboard Component
+
+**Goal:** Build the main home page with stats and recent documents.
+
+---
+
+### 📄 Open `components/dashboard/dashboard.ts` — rename to `DashboardComponent`
+
+- `standalone: true`, import `CommonModule`, `RouterModule`
+- Inject: `DocumentService`, `AuthService`
+
+**Add these properties:**
+- `isLoading = true`
+- `totalDocuments = 0`
+- `pendingCount = 0`
+- `approvedCount = 0`
+- `rejectedCount = 0`
+- `recentDocuments: Document[] = []`
+
+**In `ngOnInit()`:**
+- Decide which service method to call based on role:
+  - Admin: `documentService.getAllDocuments()`
+  - Others: `documentService.getMyDocuments()`
+- In the `.subscribe()`:
+  - Set `totalDocuments = docs.length`
+  - Count by status: `pendingCount = docs.filter(d => d.status === 'PENDING').length` (repeat for APPROVED, REJECTED)
+  - Set `recentDocuments = docs.slice(0, 5)` — take only the last 5 for the recent section
+  - Set `isLoading = false`
+
+---
+
+### 📄 Open `components/dashboard/dashboard.html`
+
+**Layout:**
+
+1. Loading state: `<div *ngIf="isLoading">Loading dashboard...</div>`
+2. Main content: `<div *ngIf="!isLoading">`
+
+**Stats cards row:**
+- Wrap 4 cards in `<div class="stats-row">`
+- Each card: `<div class="stat-card">` with a number `<h2>{{ totalDocuments }}</h2>` and label `<p>Total Documents</p>`
+- Cards: Total Documents, Pending, Approved, Rejected
+
+**Recent Documents section:**
+- Heading: `<h3>Recent Documents</h3>`
+- Table with columns: Title, Status, Date
+- Loop with `*ngFor="let doc of recentDocuments"`
+- Status column: `<span [class]="'badge ' + doc.status.toLowerCase()">{{ doc.status }}</span>` — applies CSS class based on status
+- If no documents: `<p *ngIf="recentDocuments.length === 0">No documents found.</p>`
+
+---
+
+### 📄 Open `components/dashboard/dashboard.css`
+
+Write styles for:
+- `.stats-row` — use CSS Grid or Flexbox, 4 columns, gap between cards
+- `.stat-card` — white background, rounded corners, padding, box shadow
+- `.stat-card h2` — large font, primary color
+- `.badge` — pill shape (border-radius, padding, font-weight)
+- `.badge.pending` — yellow/orange colors
+- `.badge.approved` — green colors
+- `.badge.rejected` — red colors
+- `.badge.draft` — grey colors
+
+**📂 Files worked on today:**
+- `components/dashboard/dashboard.ts`
+- `components/dashboard/dashboard.html`
+- `components/dashboard/dashboard.css`
+
+---
+
+## ✅ Day 20 — Documents Component (Upload & List)
+
+**Goal:** Let users see all their documents and upload new ones.
+
+---
+
+### 📄 Open `components/document/document.ts` — rename to `DocumentComponent`
+
+- `standalone: true`, import `CommonModule`, `FormsModule`
+- Inject: `DocumentService`, `AuthService`
+
+**Properties:**
+- `documents: Document[] = []`
+- `showUploadForm = false` — controls whether upload form is visible
+- `isLoading = true`
+- `isUploading = false`
+- `title = ''`, `description = ''` — form fields
+- `selectedFile: File | null = null` — the selected file
+- `errorMessage = ''`, `successMessage = ''`
+
+**Write method `loadDocuments()`:**
+- Set `isLoading = true`
+- Call `documentService.getMyDocuments()` (or `getAllDocuments()` for admin)
+- In subscribe: set `documents`, set `isLoading = false`
+
+**Write method `onFileSelected(event: Event)`:**
+- Cast event target: `const input = event.target as HTMLInputElement`
+- Check `input.files && input.files.length > 0`
+- If yes: `this.selectedFile = input.files[0]`
+
+**Write method `upload()`:**
+- Validate: title is not empty AND selectedFile is not null
+- Set `isUploading = true`
+- Call `documentService.uploadDocument(this.title, this.description, this.selectedFile)`
+- On success: set `successMessage`, clear form fields, set `showUploadForm = false`, call `loadDocuments()`
+- On error: set `errorMessage`
+- In both cases: `isUploading = false`
+
+**Write method `deleteDocument(id: number)`:**
+- `if (!confirm('Are you sure you want to delete this document?')) return`
+- Call `documentService.deleteDocument(id)`
+- On success: reload documents and show success message
+
+---
+
+### 📄 Open `components/document/document.html`
+
+**Structure:**
+
+1. Page header: `<div class="page-header">` with heading "My Documents" and an "Upload Document" button
+   - Button calls `(click)="showUploadForm = !showUploadForm"`
+   - Button text changes: `{{ showUploadForm ? 'Cancel' : '+ Upload Document' }}`
+
+2. Upload form panel — `<div class="upload-panel" *ngIf="showUploadForm">`:
+   - Title input — `[(ngModel)]="title"`, required
+   - Description textarea — `[(ngModel)]="description"`
+   - File input — `(change)="onFileSelected($event)"`, `accept=".pdf,.doc,.docx,.xlsx"`
+   - Show selected file name if any: `<small *ngIf="selectedFile">Selected: {{ selectedFile.name }}</small>`
+   - Submit button — `[disabled]="isUploading || !title || !selectedFile"`, shows "Uploading..." when loading
+
+3. Success/error messages with `*ngIf`
+
+4. Loading state: `<div *ngIf="isLoading">Loading documents...</div>`
+
+5. Documents table `*ngIf="!isLoading && documents.length > 0"`:
+   - Columns: Title, Description, Status (badge), Upload Date, Actions
+   - Actions: Download button and Delete button per row
+   - Delete button calls `deleteDocument(doc.id)`
+
+6. Empty state `*ngIf="!isLoading && documents.length === 0"`:
+   - Message: "No documents found. Click 'Upload Document' to get started!"
+
+**📂 Files worked on today:**
+- `components/document/document.ts`
+- `components/document/document.html`
+- `components/document/document.css`
+
+---
+
+# 📅 WEEK 4 — Complete Frontend & Polish (Days 21–30)
+
+---
+
+## ✅ Day 21 — Approval Component
+
+**Goal:** Build the page where approvers can review and act on pending documents.
+
+---
+
+### 📄 Open `components/approval/approval.ts` — rename to `ApprovalComponent`
+
+**Properties:**
+- `pendingApprovals: any[] = []`
+- `isLoading = true`
+- `comments = ''` — the comment textarea value
+- `processingId: number | null = null` — tracks which item is being processed
+
+**Write `ngOnInit()`:** load pending approvals
+
+**Write method `approve(documentId: number)`:**
+- Set `processingId = documentId`
+- Call `approvalService.processApproval({ documentId, status: 'APPROVED', comments: this.comments })`
+- On success: show alert, reload approvals, clear comments
+- On error: show error message
+
+**Write method `reject(documentId: number)`:**
+- Validate that `comments` is not empty — if empty, set `errorMessage = 'Comments are required when rejecting'` and return
+- Same pattern as approve but with status `'REJECTED'`
+
+**Write method `loadApprovals()`:**
+- Calls `approvalService.getPendingApprovals()`, stores result in `pendingApprovals`
+
+---
+
+### 📄 Open `components/approval/approval.html`
+
+**Structure:**
+
+1. Page heading: "Pending Approvals"
+2. Empty state `*ngIf="pendingApprovals.length === 0 && !isLoading"`: "No pending approvals 🎉"
+3. Loading state
+4. Approval cards — `*ngFor="let item of pendingApprovals"`:
+   - Each card shows: Document Title (bold), "Submitted by: username", "Submitted on: date"
+   - Comments textarea: `[(ngModel)]="comments"`, placeholder "Add your comments here..."
+   - Error message for empty comments on rejection
+   - Two action buttons:
+     - `✅ Approve` button — green, `(click)="approve(item.documentId)"`, `[disabled]="processingId === item.documentId"`
+     - `❌ Reject` button — red, `(click)="reject(item.documentId)"`, `[disabled]="processingId === item.documentId"`
+
+**📂 Files worked on today:**
+- `components/approval/approval.ts`
+- `components/approval/approval.html`
+- `components/approval/approval.css`
+
+---
+
+## ✅ Day 22 — Notification Component
+
+### 📄 Open `components/notification/notification.ts` — rename to `NotificationComponent`
+
+**Properties:**
+- `notifications: Notification[] = []`
+- `isLoading = true`
+- `unreadCount = 0`
+
+**Write `ngOnInit()`:**
+- Load notifications, calculate `unreadCount = notifications.filter(n => !n.isRead).length`
+
+**Write method `markRead(id: number)`:**
+- Call `notificationService.markAsRead(id)`
+- On success: find the notification in the local array and set `isRead = true`, recalculate `unreadCount`
+
+**Write method `markAllRead()`:**
+- Call `notificationService.markAllAsRead()`
+- On success: set all `isRead = true` in the local array, set `unreadCount = 0`
+
+---
+
+### 📄 Open `components/notification/notification.html`
+
+**Structure:**
+1. Header row with: heading "🔔 Notifications", badge showing unread count, "Mark All as Read" button (disabled when `unreadCount === 0`)
+2. Loading state
+3. Empty state: "No notifications yet"
+4. Notification list `*ngFor`:
+   - Each item uses `[class.unread]="!n.isRead"` to add unread styling class
+   - Show: message text, created date (smaller font)
+   - Show "Mark as Read" button only for unread items: `*ngIf="!n.isRead"`, calls `markRead(n.id)`
+
+**📂 Files worked on today:**
+- `components/notification/notification.ts`
+- `components/notification/notification.html`
+- `components/notification/notification.css`
+
+---
+
+## ✅ Day 23 — Profile Component
+
+### 📄 Open `components/profile/profile.ts` — rename to `ProfileComponent`
+
+- Inject `AuthService`
+- Add properties: `username = authService.getUsername()`, `role = authService.getUserRole()`
+- You can extend this later to allow editing username — for now, read-only is fine
+
+### 📄 Open `components/profile/profile.html`
+
+- Create a centered card layout
+- Show an avatar circle with the first letter of username: `{{ username.charAt(0).toUpperCase() }}`
+- Display username, email, and role — all read-only
+- Optional: Add an "Edit Profile" form that shows when a button is clicked
+
+**📂 Files worked on today:**
+- `components/profile/profile.ts`
+- `components/profile/profile.html`
+- `components/profile/profile.css`
+
+---
+
+## ✅ Day 24 — Admin Panel Component
+
+**Goal:** Build a page for admins to see and manage all users.
+
+Create a NEW folder `src/app/components/admin/` with 3 new files inside.
+
+---
+
+### 📄 Create `components/admin/admin.ts`
+
+- Class: `AdminComponent`
+- `standalone: true`, import `CommonModule`
+- Inject: `UserService` (add `getAllUsers()` and `deleteUser(id)` methods there if not done already)
+- Properties: `users: any[] = []`, `isLoading = true`
+- Write `ngOnInit()` — loads all users
+- Write `deleteUser(id: number)` — confirm first, then call service, reload list
+
+### 📄 Create `components/admin/admin.html`
+
+- Heading: "👥 User Management"
+- Loading state
+- Table with columns: ID, Username, Email, Role, Department, Actions
+- Actions column: Delete button, which calls `deleteUser(user.id)` with red styling
+- Show row count: `<p>Total users: {{ users.length }}</p>`
+
+### Update `app.routes.ts`
+
+- Add new route: `{ path: 'admin', component: AdminComponent, canActivate: [authGuard, adminGuard] }`
+- This means: user must be logged in AND must be an admin to access this page
+
+### Update `components/sidebar/sidebar.html`
+
+- The admin link should already be there with `*ngIf="isAdmin"` — make sure the `routerLink="/admin"` is correct
+
+**📂 Files worked on today:**
+- `components/admin/admin.ts` ← CREATED NEW
+- `components/admin/admin.html` ← CREATED NEW
+- `components/admin/admin.css` ← CREATED NEW
+- `app.routes.ts`
+
+---
+
+## ✅ Day 25 — Global Styles & App Layout CSS
+
+**Goal:** Make the entire app look consistent and professional.
+
+---
+
+### 📄 Open `src/styles.css`
+
+This file applies to every component in the app.
+
+**Step 1 — Define CSS Variables (custom properties):**
+- These variables let you change the color theme from one place
+- Define inside `:root { }`:
+  - `--primary-color: #2563eb` (blue — for buttons and links)
+  - `--success-color: #16a34a` (green — for approved/success)
+  - `--danger-color: #dc2626` (red — for rejected/delete/error)
+  - `--warning-color: #d97706` (orange/yellow — for pending/warning)
+  - `--bg-color: #f1f5f9` (light grey — page background)
+  - `--card-bg: #ffffff` (white — card backgrounds)
+  - `--text-primary: #1e293b` (dark grey — main text)
+  - `--border-color: #e2e8f0` (light grey — borders)
+
+**Step 2 — CSS Reset:**
+- `* { box-sizing: border-box; margin: 0; padding: 0; }` — removes browser default spacing
+- `body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg-color); color: var(--text-primary); }`
+
+**Step 3 — Reusable Utility Classes:**
+
+Status badge classes:
+- `.badge` — base style: `padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600`
+- `.badge.pending` — background: `#fef3c7` (light yellow), color: `#92400e`
+- `.badge.approved` — background: `#dcfce7` (light green), color: `#166534`
+- `.badge.rejected` — background: `#fee2e2` (light red), color: `#991b1b`
+- `.badge.draft` — background: `#f1f5f9` (light grey), color: `#475569`
+
+Button classes:
+- `.btn` — base: `cursor: pointer; padding: 8px 16px; border-radius: 6px; border: none; font-weight: 500`
+- `.btn-primary` — `background: var(--primary-color); color: white`
+- `.btn-success` — `background: var(--success-color); color: white`
+- `.btn-danger` — `background: var(--danger-color); color: white`
+- All buttons: add `hover` state with slightly darker background and `disabled` state with `opacity: 0.6; cursor: not-allowed`
+
+Card class:
+- `.card` — `background: var(--card-bg); border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1)`
+
+Table classes:
+- `table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; }`
+- `th { background: #f8fafc; padding: 12px 16px; text-align: left; font-weight: 600; }`
+- `td { padding: 12px 16px; border-top: 1px solid var(--border-color); }`
+- `tr:hover { background: #f8fafc; }`
+
+Form classes:
+- `.form-group { margin-bottom: 16px; }`
+- `.form-group label { display: block; margin-bottom: 6px; font-weight: 500; }`
+- `input, textarea, select { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 6px; }`
+- `input:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }`
+
+**Step 4 — App Layout CSS:**
+- `.app-layout { display: flex; min-height: calc(100vh - 60px); }` (subtract navbar height)
+- `.sidebar { width: 240px; background: white; border-right: 1px solid var(--border-color); padding: 20px 0; }`
+- `.main-content { flex: 1; padding: 24px; overflow-y: auto; }`
+
+**📂 Files worked on today:**
+- `src/styles.css`
+- `app.css`
+- All component `.css` files (refactor to use the new variables and classes)
+
+---
+
+## ✅ Day 26 — Loading States, Error Messages & Form Validation
+
+**Goal:** Make every part of the app give proper feedback — no more silent failures or empty screens.
+
+---
+
+### In EVERY component that loads data:
+
+**In the TypeScript file:**
+- Add `isLoading = true` property
+- Add `errorMessage = ''` property
+- In the service call, use this pattern:
+  - `next:` callback — set your data, set `isLoading = false`
+  - `error:` callback — set `errorMessage = 'Failed to load. Please try again.'`, set `isLoading = false`
+
+**In the HTML template:**
+- At the top: `<div class="loading" *ngIf="isLoading">⏳ Loading...</div>`
+- Error message: `<div class="error-message" *ngIf="errorMessage">{{ errorMessage }}</div>`
+- Main content wrapped in: `<div *ngIf="!isLoading && !errorMessage">...content...</div>`
+
+---
+
+### In EVERY form (login, register, upload document, process approval):
+
+**Show field-level validation errors:**
+- For required fields: `<span class="error-text" *ngIf="titleInput.invalid && titleInput.touched">Title is required</span>`
+- For email format: `<span class="error-text" *ngIf="emailInput.errors?.['email']">Invalid email format</span>`
+- Use template reference variables on inputs: `#titleInput="ngModel"`
+
+**Disable submit button** when form is invalid:
+- `[disabled]="form.invalid || isLoading"` on the submit button
+
+**Prevent double submission:**
+- Set `isLoading = true` immediately when submit is clicked, so the button becomes disabled
+- Set it back to `false` in both success and error callbacks
+
+---
+
+### Add empty states for every list:
+
+- Documents page: "No documents yet. Start by uploading your first document!" with an upload button
+- Approvals page: "No pending approvals 🎉 All documents have been reviewed."
+- Notifications page: "You're all caught up! No new notifications."
+
+**📂 Files worked on today:**
+- All component `.ts` and `.html` files
+
+---
+
+## ✅ Day 27 — File Download Feature
+
+**Goal:** Let users download the documents they uploaded.
+
+---
+
+### 📄 Backend — Open `controller/DocumentController.java`
+
+Add a new endpoint: `GET /api/documents/{id}/download`
+
+**Inside the method:**
+- Annotate with `@GetMapping("/{id}/download")`
+- Use `@PathVariable Long id`
+- Find the document by id using `documentRepository.findById(id)` (inject the repository)
+- Get the file path from `document.getFilePath()`
+- Create a `Path` object: `Path filePath = Paths.get(storedPath)`
+- Create a Resource: `Resource resource = new UrlResource(filePath.toUri())`
+- Check the resource exists: `resource.exists() && resource.isReadable()` — throw exception if not
+- Build and return a `ResponseEntity<Resource>`:
+  - Content type: `MediaType.APPLICATION_OCTET_STREAM`
+  - Content disposition header: `"attachment; filename=\"" + filePath.getFileName().toString() + "\""`
+  - Body: the resource object
+  - Method imports needed: `org.springframework.core.io.Resource`, `org.springframework.core.io.UrlResource`, `org.springframework.http.HttpHeaders`, `java.nio.file.*`
+
+---
+
+### 📄 Frontend — Open `services/document.ts`
+
+Add method `downloadDocument(id: number): void`:
+- Simply open the download URL in a new browser tab
+- Use: `window.open(\`${this.apiUrl}/${id}/download\`, '_blank')`
+- The browser will handle the download automatically
+
+---
+
+### 📄 Open `components/document/document.html`
+
+In the table's Actions column, add a Download button:
+- Style it as a secondary button (blue outline or blue filled)
+- Click handler: `(click)="documentService.downloadDocument(doc.id)"` OR create a wrapper method in the component
+- Place it next to the Delete button
+
+**📂 Files worked on today:**
 - `Backend/.../controller/DocumentController.java`
 - `Frontend/.../services/document.ts`
-- `Frontend/.../components/document/document.ts` & `.html`
+- `Frontend/.../components/document/document.html`
 
 ---
 
-### ✅ Day 28 — Security Hardening & Error Handling Polish
+## ✅ Day 28 — Security Hardening & Input Validation
 
-**Goal:** Tighten security rules and ensure all edge cases are handled gracefully.
-
-**Tasks:**
-
-1. **Backend security review:**
-   - Ensure users can only access their OWN documents (not other users' documents) — check service layer
-   - Only ADMIN can delete users or access all documents
-   - Approvers can only process approvals assigned to them — validate in `ApprovalService`
-   - Add `@PreAuthorize("hasRole('ADMIN')")` annotations where needed in controllers
-   - Add Spring Security's method-level security: `@EnableMethodSecurity` in `SecurityConfig`
-
-2. **Input validation on backend DTOs:**
-   - Add `@NotBlank`, `@Email`, `@Size` annotations from `jakarta.validation.constraints` to all DTO fields
-   - Ensure `@Valid` is used on `@RequestBody` in controllers
-   - The `GlobalExceptionHandler` should catch `MethodArgumentNotValidException` and return field-level error messages
-
-3. **Frontend error handling:**
-   - In `ErrorInterceptor`: handle 500 errors with a generic "Something went wrong" alert
-   - In components: show specific messages from API error responses (extract from `error.error.message`)
-   - Prevent double-submission by disabling buttons after first click
-
-4. **Token expiry handling:**
-   - In `AuthService.isLoggedIn()`: decode the JWT token and check the `exp` claim
-   - If expired, clear localStorage and redirect to login
-
-**Files to work on:**
-- `Backend/.../controller/*.java` (add `@PreAuthorize` annotations)
-- `Backend/.../dto/*.java` (add validation annotations)
-- `Backend/.../config/SecurityConfig.java` (enable method security)
-- `Backend/.../exception/GlobalExceptionHandler.java` (handle validation errors)
-- `Frontend/.../interceptors/error-interceptor.ts`
-- `Frontend/.../services/auth.ts`
+**Goal:** Make sure users can only do what they're supposed to do, and validate all input.
 
 ---
 
-### ✅ Day 29 — End-to-End Testing & Bug Fixing
+### 📄 Backend — Add input validation to DTO classes
 
-**Goal:** Run the full application and test every user journey end-to-end.
+Jakarta Bean Validation allows you to annotate DTO fields to enforce rules automatically. Add these annotations to the appropriate fields:
 
-**Tasks:**
+**In `dto/LoginRequest.java`:**
+- `@NotBlank(message = "Email is required")` on `email`
+- `@Email(message = "Invalid email format")` on `email`
+- `@NotBlank(message = "Password is required")` on `password`
 
-1. **Test all user roles manually:**
+**In `dto/RegisterRequest.java`:**
+- `@NotBlank` on `username`, `email`, `password`
+- `@Email` on `email`
+- `@Size(min = 6, message = "Password must be at least 6 characters")` on `password`
 
-   **As Admin:**
-   - Register/Login → view dashboard stats
-   - Manage departments (create, edit, delete)
-   - View all documents
-   - View all users, delete a user
-   - View reports page
+**In `dto/DocumentRequest.java`:**
+- `@NotBlank(message = "Document title is required")` on `title`
 
-   **As Regular User:**
-   - Register → Login → dashboard
-   - Upload a document
-   - Submit document for approval
-   - View notifications when approval is processed
-   - View document status changes
-
-   **As Approver:**
-   - Login → see pending approvals on dashboard
-   - Navigate to Approvals page → approve one, reject one with comments
-   - Verify notifications are created for the document uploader
-
-2. **Bug fix list** — document and fix any bugs found during testing
-
-3. **Check console errors** — fix all TypeScript errors and Angular console warnings
-
-4. **Performance check:**
-   - Ensure no duplicate API calls on page load
-   - Use `ngOnDestroy` and unsubscribe from Observables to prevent memory leaks
-
-**Files to work on:**
-- Any file with bugs found during testing
+**In controllers:** Wherever you have `@RequestBody`, add `@Valid` before it:
+- `@Valid @RequestBody LoginRequest request`
+- `@Valid @RequestBody RegisterRequest request`
+- This triggers validation and throws `MethodArgumentNotValidException` if rules are violated
+- Your `GlobalExceptionHandler` will catch this and return field-level error messages
 
 ---
 
-### ✅ Day 30 — Final Cleanup, Documentation & Submission
+### 📄 Backend — Service-level security checks
 
-**Goal:** Clean up the codebase, write documentation, and prepare for submission/demo.
+**In `services/DocumentService.java`:**
+- In `deleteDocument(Long id, String requestingUserEmail)` (add the email parameter):
+  - Find the document
+  - Check `document.getUploadedBy().getEmail().equals(requestingUserEmail)` OR if the requester is admin
+  - If neither, throw `new BadRequestException("You can only delete your own documents")`
 
-**Tasks:**
-
-1. **Code cleanup:**
-   - Remove all `console.log()` statements from Angular code
-   - Remove unused imports in all files
-   - Ensure consistent code formatting (run Prettier on Angular: `npx prettier --write src/`)
-   - Add comments to complex methods in backend services
-
-2. **Update `Database/dbsql.sql`** with the final complete schema including all `CREATE TABLE` statements and any seed data (e.g., default roles: ADMIN, USER, APPROVER)
-
-3. **Write `README.md`** at the root of the project:
-   - Project description
-   - Tech stack
-   - How to run backend (Maven command, required env vars)
-   - How to run frontend (`ng serve`)
-   - How to set up the database
-   - Default login credentials for testing
-
-4. **Final demo preparation:**
-   - Create 2-3 test accounts (Admin, Approver, Regular User) in the database
-   - Upload 3-4 sample documents
-   - Have at least 1 approved and 1 rejected document ready to show
-   - Test on a clean browser (incognito) to simulate first-time user experience
-
-5. **Commit and push all work:**
-   ```
-   git add .
-   git commit -m "feat: complete Digital Document Approval System implementation"
-   git push origin main
-   ```
-
-**Files to work on:**
-- Root `README.md` *(create)*
-- `Database/dbsql.sql` (finalize)
-- All files (final cleanup pass)
+**In `services/ApprovalService.java`:**
+- In `processApproval()`, verify the logged-in user is actually the assigned approver
+- Throw `BadRequestException` if someone else tries to process an approval not assigned to them
 
 ---
 
-## 📊 30-Day Summary
+### 📄 Frontend — Improve error display
 
-| Days | Focus Area | Key Deliverables |
-|------|-----------|-----------------|
-| 1–3  | DB & Entities | Schema designed, all 6 JPA entities implemented |
-| 4    | Repositories & DTOs | 5 repositories + 9 DTOs done |
-| 5–6  | Security Setup | JWT auth, SecurityConfig, exception handling |
-| 7–9  | Auth & Core APIs | Auth, User, Department REST endpoints working |
-| 10–12 | Business Logic APIs | Document upload, Approval workflow, Notifications, Reports |
-| 13   | Backend Testing | Postman collection, unit tests, bug fixes |
-| 14–15 | Angular Foundation | Models, services, interceptors, guards |
-| 16–17 | Auth UI | Login, Register, Navbar, Sidebar, Routing |
-| 18–20 | Core UI Pages | Dashboard, Documents, Approvals |
-| 21–22 | More UI Pages | Notifications, Profile, Admin panel |
-| 23–24 | Advanced Features | Submit for approval flow, Reports page |
-| 25–26 | Polish | Styling, responsiveness, validation, feedback |
-| 27–28 | Advanced & Security | File download, security hardening |
-| 29–30 | Testing & Submission | End-to-end test, cleanup, docs, commit |
+**In `interceptors/error-interceptor.ts`:**
+- Extract the backend error message from the response body: `error.error?.error || error.message || 'An unexpected error occurred'`
+- Show it in a more user-friendly way
+
+**In all form components:**
+- Display the specific error message returned from the backend (not just a generic one)
+- For example, show "Email is already registered!" instead of just "Registration failed"
+
+**📂 Files worked on today:**
+- All `dto/*.java` files (add validation annotations)
+- All controller files (add `@Valid`)
+- `exception/GlobalExceptionHandler.java` (add handler for validation errors)
+- `services/DocumentService.java` (security check)
+- `services/ApprovalService.java` (security check)
+- `interceptors/error-interceptor.ts`
 
 ---
 
-## 💡 Tips for the Intern
+## ✅ Day 29 — Full End-to-End Testing
 
-1. **Always run the backend first**, then the frontend. Backend on port `8080`, frontend on `4200`.
-2. **JWT token flow:** Login → backend returns token → Angular stores in `localStorage` → `AuthInterceptor` adds it to every request header → backend `JwtAuthenticationFilter` validates it.
-3. **Lombok:** Use `@Data` (generates getters/setters/equals/hashCode), `@NoArgsConstructor`, `@AllArgsConstructor` on entities and DTOs to avoid boilerplate.
-4. **When stuck on a 403 error:** Check the `SecurityConfig` whitelist. The route probably needs to be permitted.
-5. **When stuck on a CORS error:** Check that `SecurityConfig` allows `http://localhost:4200` as an origin.
-6. **Angular standalone components:** Each component must import the modules it uses (e.g., `FormsModule`, `RouterModule`, `CommonModule`) in its own `imports: []` array since there's no `AppModule`.
-7. **Commit daily** to avoid losing work: `git add . && git commit -m "day X: description"`
+**Goal:** Test the complete application from start to finish like a real user would.
+
+---
+
+### 🧪 Test Scenario 1 — Regular User Journey
+
+1. Open `http://localhost:4200` in a browser
+2. Click Register → fill in the form with role "USER" → submit
+3. Login with the new account → you should land on Dashboard
+4. Go to Documents page → click Upload → fill in title, description, pick a PDF file → upload
+5. Verify: the document appears in the list with status "PENDING"
+6. Click Download on the document → verify the file downloads correctly
+7. Check Notifications → a notification should appear that your document was submitted
+8. Check the Dashboard → document counts should be updated
+
+### 🧪 Test Scenario 2 — Approver Journey
+
+1. Register a second account with role "APPROVER" (use different email)
+2. Login as the APPROVER
+3. Go to Approvals page → the pending document from Scenario 1 should appear
+4. Write a comment in the comments box
+5. Click Approve → verify the approval success message appears
+6. Login back as the USER → go to Documents page → status should now show "APPROVED"
+7. Check Notifications as the USER → should see "Your document was APPROVED"
+
+### 🧪 Test Scenario 3 — Admin Journey
+
+1. Register a third account with role "ADMIN" (use different email)
+2. Login as ADMIN
+3. Go to Admin Panel → all 3 users should be listed
+4. Go to Dashboard → stats should show correct totals
+5. Try accessing `/admin` while logged in as USER → should redirect to login (guard is working)
+
+### 🧪 Test Edge Cases
+
+- Try logging in with wrong password → should see "Invalid email or password" error
+- Try registering with an already-used email → should see "Email already registered" error
+- Try uploading without selecting a file → submit button should be disabled
+- Try rejecting an approval without writing comments → should see validation error
+- Logout → try accessing `/dashboard` directly in URL → should redirect to login
+
+**Write down every bug you find and fix them before Day 30.**
+
+**📂 Files worked on today:**
+- Any files with bugs found during testing
+
+---
+
+## ✅ Day 30 — Final Cleanup, Documentation & Submission
+
+**Goal:** Clean, professional code ready to submit or demo.
+
+---
+
+### 🧹 Backend Cleanup Checklist
+
+Go through every Java file and:
+- [ ] Remove all `System.out.println()` debug statements
+- [ ] Make sure every controller method returns the correct HTTP status code (200, 201, 204, 400, 404)
+- [ ] Check that exception messages are helpful and specific (not generic "Error occurred")
+- [ ] Verify `application.properties` has the correct database settings
+- [ ] Make sure the `uploads/` folder exists in the backend root directory
+
+### 🧹 Frontend Cleanup Checklist
+
+Go through every TypeScript file and:
+- [ ] Remove all `console.log()` debug statements
+- [ ] Check browser console (press F12 → Console tab) — fix ALL red errors
+- [ ] Test all navigation links — none should lead to a blank page
+- [ ] Test login and logout — should work smoothly
+- [ ] Verify all protected pages redirect to login when not authenticated
+- [ ] Check all forms show validation errors correctly
+
+### 🧹 Database Cleanup
+
+- [ ] Update `Database/dbsql.sql` to include the final complete CREATE TABLE statements
+- [ ] Add seed data SQL at the bottom for testing: 3 users (one per role), 2 departments, 1 sample document
+
+---
+
+### 📝 Write `README.md` at the Project Root
+
+Create a new file `README.md` in the root folder of the project. Write:
+
+**Section 1 — Project Description:**
+- What this project does (2-3 sentences)
+- Who it's for
+
+**Section 2 — Tech Stack:**
+- Backend: Spring Boot 4.x, Hibernate/JPA, Spring Security (JWT), Lombok
+- Frontend: Angular, TypeScript, RxJS
+- Database: MySQL
+
+**Section 3 — How to Set Up:**
+- Step 1: Create the MySQL database by running `Database/dbsql.sql`
+- Step 2: Update `Backend/.../application.properties` with your MySQL password
+- Step 3: Open backend in IntelliJ, run the application
+
+**Section 4 — How to Run Frontend:**
+- `cd Frontend/digital-document-approval-frontend`
+- `npm install`
+- `ng serve`
+- Open `http://localhost:4200`
+
+**Section 5 — Test Accounts:**
+- Admin: email and password you created
+- Approver: email and password
+- User: email and password
+
+---
+
+### 🚀 Push to GitHub
+
+```bash
+git add .
+git commit -m "feat: Complete Digital Document Approval System implementation"
+git push origin main
+```
+
+---
+
+## 🏆 What You Built in 30 Days
+
+| Feature | Backend Done? | Frontend Done? |
+|---------|--------------|---------------|
+| User Registration & Login | JWT Auth API | Login & Register pages |
+| Department Management | CRUD API | (Admin only via API) |
+| Document Upload & List | File Upload API | Documents page with upload form |
+| Document Download | Download endpoint | Download button in documents table |
+| Approval Workflow | Submit & Process API | Approvals page |
+| Notifications | Create & Read API | Notifications page |
+| Admin User Management | Admin API | Admin Panel page |
+| Reports & Stats | Summary API | Dashboard stats cards |
+| Route Protection | Spring Security | Angular Guards |
+| Error Handling | Global Exception Handler | Interceptors + Error messages |
+
+---
+
+## 💡 Quick Reference — Common Problems & Fixes
+
+| Problem You See | What It Means | How to Fix |
+|----------------|--------------|-----------|
+| `403 Forbidden` error in Postman | The API endpoint requires authentication | Add `Authorization: Bearer YOUR_TOKEN` header in Postman |
+| `403` even with token | The route is not permitted for your role | Check `SecurityConfig.java` and `@PreAuthorize` rules |
+| `CORS error` in browser | Backend is blocking Angular requests | Add `http://localhost:4200` to allowed origins in `SecurityConfig.java` |
+| Token not sent with request | Interceptor not registered | Check `authInterceptor` is in `app.config.ts` `withInterceptors([])` list |
+| `Can't bind to ngModel` | FormsModule not imported | Add `FormsModule` to the component's `imports: []` array |
+| White/blank page in Angular | A component has a TypeScript error | Open browser DevTools (F12 → Console) and read the error |
+| Backend won't start | Database connection failed | Check `application.properties` — database URL, username, password |
+| `npm install` fails | Node.js issue | Make sure Node.js is installed, try deleting `node_modules` folder and running again |
+| Hibernate creates no tables | Entity not scanned | Check your entity classes have `@Entity` annotation and are in the right package |
+| File upload returns 500 | Upload directory doesn't exist | Create the `uploads/` folder in your backend project root |
+
+---
+
+> **One Last Thing:** You will get stuck. That's 100% normal and expected. Every developer — junior and senior — Googles things every single day. When stuck:
+> 1. Read the error message carefully — it usually tells you exactly what's wrong
+> 2. Google the error message
+> 3. Check Stack Overflow
+> 4. Ask your mentor
+>
+> **The goal is not to memorize code. The goal is to understand how the pieces fit together.** 🚀

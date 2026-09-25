@@ -1,0 +1,12 @@
+.app-layout {
+  display: flex;
+  min-height: calc(100vh - var(--navbar-h, 64px));
+}
+
+.main-content {
+  flex: 1;
+  padding: 32px 36px;
+  overflow-y: auto;
+  background: var(--bg, #f1f5f9);
+  min-width: 0;
+}

@@ -1,0 +1,71 @@
+<div class="page-header">
+  <h2>⚙️ User Management</h2>
+  <span class="count-chip">{{ users.length }} users</span>
+</div>
+
+<div *ngIf="!isLoading" class="admin-stats">
+  <div class="admin-stat-card">
+    <div class="admin-stat-icon purple">👥</div>
+    <div class="admin-stat-body">
+      <h4>{{ users.length }}</h4>
+      <p>Total Users</p>
+    </div>
+  </div>
+  <div class="admin-stat-card">
+    <div class="admin-stat-icon blue">🛡️</div>
+    <div class="admin-stat-body">
+      <h4>{{ adminCount }}</h4>
+      <p>Admins</p>
+    </div>
+  </div>
+  <div class="admin-stat-card">
+    <div class="admin-stat-icon green">✅</div>
+    <div class="admin-stat-body">
+      <h4>{{ approverCount }}</h4>
+      <p>Approvers</p>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+<div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+<div *ngIf="isLoading" class="loading">Loading users...</div>
+
+<div *ngIf="!isLoading && users.length === 0" class="empty-state">
+  <div class="empty-icon">👥</div>
+  <p>No users found.</p>
+</div>
+
+<div *ngIf="!isLoading && users.length > 0" class="table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>User</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Department</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let user of users">
+        <td>
+          <div class="user-cell">
+            <div class="user-avatar">{{ user.username[0]?.toUpperCase() }}</div>
+            <span class="user-name">{{ user.username }}</span>
+          </div>
+        </td>
+        <td style="color:#64748b;">{{ user.email }}</td>
+        <td>
+          <span [class]="'role-badge role-' + user.role.toLowerCase()">{{ user.role }}</span>
+        </td>
+        <td style="color:#64748b;">{{ user.department || '—' }}</td>
+        <td>
+          <button (click)="deleteUser(user.id)" class="btn btn-danger btn-small">
+            🗑 Delete
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

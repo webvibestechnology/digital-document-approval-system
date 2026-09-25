@@ -1,1 +1,70 @@
-<p>dashboard works!</p>
+<div class="dashboard-welcome">
+  <div class="welcome-text">
+    <h2>Welcome back! 👋</h2>
+    <p>Here's what's happening with your documents today.</p>
+  </div>
+  <span class="welcome-emoji">📊</span>
+</div>
+
+<div *ngIf="isLoading" class="loading">Loading your dashboard...</div>
+
+<div *ngIf="!isLoading">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon blue">📄</div>
+      <div class="stat-body">
+        <h3>{{ totalDocuments }}</h3>
+        <p>Total Docs</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon yellow">⏳</div>
+      <div class="stat-body">
+        <h3>{{ pendingCount }}</h3>
+        <p>Pending</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">✅</div>
+      <div class="stat-body">
+        <h3>{{ approvedCount }}</h3>
+        <p>Approved</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red">❌</div>
+      <div class="stat-body">
+        <h3>{{ rejectedCount }}</h3>
+        <p>Rejected</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p class="section-heading">📂 Recent Documents</p>
+
+    <div *ngIf="recentDocuments.length === 0" class="empty-state">
+      <div class="empty-icon">📂</div>
+      <p>No documents yet. Upload your first document to get started!</p>
+    </div>
+
+    <div *ngIf="recentDocuments.length > 0" class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Uploaded</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let doc of recentDocuments">
+            <td><strong>{{ doc.title }}</strong></td>
+            <td><span [class]="'badge ' + doc.status.toLowerCase()">{{ doc.status }}</span></td>
+            <td style="color:#64748b;">{{ doc.createdAt | slice:0:10 }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
