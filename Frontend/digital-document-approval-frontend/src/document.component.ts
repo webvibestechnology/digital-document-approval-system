@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-
+import { AuthService } from './services/autho';
+        
 
 @Component({
   selector: 'app-document',
@@ -11,7 +12,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
   styleUrls: ['./document.component.css']
 })
 export class DocumentComponent implements OnInit {
-  private documentService = inject(documentService.DocumentService);
+  private documentService = inject(this.documentService.DocumentService);
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
 

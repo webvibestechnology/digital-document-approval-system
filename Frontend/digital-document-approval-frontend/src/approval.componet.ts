@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ApprovalService } from './approval.service';
+import { ApprovalService } from './services/approval.service';
 
 export interface Approval {
   id: number;

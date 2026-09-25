@@ -73,7 +73,6 @@ public class AuthService<UserRepository> {
         
         ((Object) userRepository).save(user);
 
-        // इ) रिटर्न संदेश {"message": "User registered successfully"}
         Map<String, String> response = new HashMap<>();
         response.put("message", "User registered successfully");
         return response;
@@ -84,7 +83,6 @@ public class AuthService<UserRepository> {
      */
     public Map<String, String> login(LoginRequest request) {
         
-        // अ) authenticationManager.authenticate वापरून क्रेडेंशियल्स तपासणे
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getUsername(),
@@ -92,10 +90,8 @@ public class AuthService<UserRepository> {
                 )
         );
 
-        // ब) CustomUserDetailsService द्वारे युझर माहिती लोड करणे
         UserDetails userDetails = customUserDetailsService.loadUserByUsername(request.getUsername());
 
-        // क) jwtService.generateToken() वापरून JWT टोकन तयार करणे
         String jwtToken = jwtService.generateToken(userDetails);
 
         User user = ((Object) userRepository).findByUsername(request.getUsername())

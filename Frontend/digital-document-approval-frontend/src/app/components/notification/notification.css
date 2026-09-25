@@ -1,0 +1,19 @@
+
+.unread-item {
+  background-color: #f0f7ff; 
+  border-left: 4px solid #007bff;
+  font-weight: bold;
+}
+
+.read-item {
+  background-color: #ffffff;
+  color: #6c757d;
+}
+
+.unread-dot {
+  height: 8px;
+  width: 8px;
+  background-color: #007bff;
+  border-radius: 50%;
+  display: inline-block;
+}

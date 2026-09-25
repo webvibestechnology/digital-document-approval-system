@@ -1,1 +1,29 @@
 <p>notification works!</p>
+<div class="notification-container">
+  
+
+  <button 
+    [disabled]="unreadCount === 0" 
+    (click)="markAllAsRead()">
+    Mark All as Read
+  </button>
+
+  <ul class="notification-list">
+    <li 
+      *ngFor="let item of notifications" 
+      [ngClass]="{'unread-item': !item.isRead, 'read-item': item.isRead}"
+      (click)="!item.isRead && markAsRead(item.id)">
+      
+      <div class="notification-content">
+        <p class="message">{{ item.message }}</p>
+        
+        <span class="timestamp">{{ item.timestamp | date:'short' }}</span>
+      </div>
+
+      <span *ngIf="!item.isRead" class="unread-dot"></span>
+
+    </li>
+  </ul>
+
+</div>
+
