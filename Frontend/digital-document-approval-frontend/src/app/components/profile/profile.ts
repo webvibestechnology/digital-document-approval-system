@@ -12,9 +12,11 @@ import { AuthService } from '../../services/auth';
 export class ProfileComponent {
   username = '';
   role = '';
+  email: any;
 
   constructor(private authService: AuthService) {
     this.username = authService.getUsername();
     this.role = authService.getUserRole();
+    this.email=authService.getUserEmail();
   }
 }
