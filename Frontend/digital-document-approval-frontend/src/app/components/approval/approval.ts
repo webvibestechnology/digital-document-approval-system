@@ -86,3 +86,5 @@ export class ApprovalComponent implements OnInit {
     });
   }
 }
+
+export type { Approval };

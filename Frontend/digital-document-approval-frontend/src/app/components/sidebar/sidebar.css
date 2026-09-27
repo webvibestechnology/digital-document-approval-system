@@ -12,7 +12,6 @@
   overflow: hidden;
 }
 
-/* Decorative glow in the corner */
 .sidebar::before {
   content: '';
   position: absolute;

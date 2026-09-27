@@ -4,11 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { DocumentService } from '../../services/document';
 import { AuthService } from '../../services/auth';
 import { Document } from '../../models/document';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+
 
 @Component({
   selector: 'app-document',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+    imports: [CommonModule, FormsModule, HttpClientModule],
   templateUrl: './document.html',
   styleUrl: './document.css',
 })
@@ -23,10 +25,28 @@ export class DocumentComponent {
   errorMessage = '';
   successMessage = '';
 
-  constructor(
+    constructor(
     private documentService: DocumentService,
-    private authService: AuthService
+    private authService: AuthService,
+    private http: HttpClient
   ) {}
+  downloadFile(documentId: number) {
+    const token = localStorage.getItem('token'); 
+    
+    this.http.get(`http://localhost:8080/api/documents/${documentId}/download`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+      responseType: 'blob' 
+    }).subscribe((response: Blob) => {
+      const blob = new Blob([response], { type: response.type });
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = 'downloaded_file.pdf'; 
+      anchor.click();
+    }, error => {
+      console.error('Download failed', error);
+    });
+  }
 
   ngOnInit() {
     this.loadDocuments();
@@ -34,6 +54,7 @@ export class DocumentComponent {
 
   loadDocuments() {
     this.isLoading = true;
+    this.errorMessage = '';
     const userRole = this.authService.getUserRole();
     const serviceMethod = userRole === 'ADMIN' 
       ? this.documentService.getAllDocuments() 

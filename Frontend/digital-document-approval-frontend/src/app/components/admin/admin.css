@@ -13,7 +13,6 @@
   letter-spacing: -0.02em;
 }
 
-/* ── User cell ── */
 .user-cell {
   display: flex;
   align-items: center;
@@ -41,7 +40,6 @@
   font-size: 0.9rem;
 }
 
-/* ── Role badges (standalone in admin) ── */
 .role-badge {
   display: inline-flex;
   align-items: center;
@@ -56,7 +54,6 @@
 .role-user     { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #1d4ed8; border: 1px solid #bfdbfe; }
 .role-approver { background: linear-gradient(135deg, #f0fdf4, #dcfce7); color: #15803d; border: 1px solid #bbf7d0; }
 
-/* ── Stats bar at top ── */
 .admin-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

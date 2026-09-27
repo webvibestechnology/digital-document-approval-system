@@ -3,7 +3,6 @@
   min-height: 100vh;
 }
 
-/* ── Left panel ── */
 .auth-left {
   flex: 1;
   background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 35%, #312e81 65%, #4338ca 100%);
@@ -16,7 +15,6 @@
   overflow: hidden;
 }
 
-/* Decorative circles */
 .auth-left::before {
   content: '';
   position: absolute;
@@ -90,7 +88,6 @@
   transform: translateX(4px);
 }
 
-/* ── Right panel ── */
 .auth-right {
   width: 500px;
   display: flex;
@@ -145,7 +142,6 @@
 }
 .auth-switch a:hover { color: #4338ca; text-decoration: underline; }
 
-/* ── Divider ── */
 .auth-divider {
   display: flex;
   align-items: center;

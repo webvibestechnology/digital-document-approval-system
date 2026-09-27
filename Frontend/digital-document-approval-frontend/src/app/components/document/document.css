@@ -57,7 +57,6 @@
 }
 .file-icon { font-size: 1.6rem; }
 
-/* ── Table action buttons group ── */
 .action-group {
   display: flex;
   gap: 6px;

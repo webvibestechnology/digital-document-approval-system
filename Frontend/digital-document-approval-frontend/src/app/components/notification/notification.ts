@@ -59,3 +59,5 @@ export class NotificationComponent {
     });
   }
 }
+
+export type { Notification };
