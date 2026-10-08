@@ -1,26 +1,32 @@
-import { Component } from '@angular/core';
-import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
+import { Component, ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
+import { provideRouter, RouterModule } from '@angular/router';
+import { provideHttpClient, withInterceptorsFromDi, HTTP_INTERCEPTORS } from '@angular/common/http';
+import { bootstrapApplication } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
-import { NavbarComponent } from './components/navbar/navbar';
-import { SidebarComponent } from './components/sidebar/sidebar';
-import { filter } from 'rxjs/operators';
+import { routes } from './app.routes';
+import { AuthInterceptor } from './interceptors/auth-interceptor';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, SidebarComponent, CommonModule],
-  templateUrl: './app.html',
-  styleUrl: './app.css'
+  imports: [CommonModule, RouterModule],
+  template: '<router-outlet></router-outlet>',
 })
-export class App {
-  showLayout = false;
-
-  constructor(private router: Router) {
-    this.router.events
-      .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe((event: NavigationEnd) => {
-        const authRoutes = ['/login', '/register'];
-        this.showLayout = !authRoutes.includes(event.urlAfterRedirects);
-      });
-  }
+export class AppComponent {
+  title = 'digital-document-approval';
 }
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideRouter(routes),
+    provideHttpClient(withInterceptorsFromDi()),
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true,
+    },
+  ],
+};
+
+bootstrapApplication(AppComponent, appConfig).catch((err) => console.error(err));

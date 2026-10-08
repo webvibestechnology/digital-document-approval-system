@@ -1,7 +1,6 @@
 package com.documentapproval.services;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +47,7 @@ public class ApprovalService {
     }
 
     public Approval processApproval(ApprovalRequest request, String approverEmail) {
+        
         User approver = userRepository.findByEmail(approverEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Approver not found with email: " + approverEmail));
 
@@ -55,11 +55,17 @@ public class ApprovalService {
                 .orElseThrow(() -> new ResourceNotFoundException("Document not found with id: " + request.getDocumentId()));
 
         Optional<Approval> existingApproval = approvalRepository.findByDocumentAndApprover(document, approver);
+        
         if (existingApproval.isEmpty()) {
-            throw new ResourceNotFoundException("Approval record not found for this document and approver");
+            throw new IllegalArgumentException("या डॉक्युमेंटसाठी तुम्हाला अप्रूव्हर म्हणून नियुक्त केलेले नाही!");
         }
 
         Approval approval = existingApproval.get();
+        
+        if (!approval.getApprover().getEmail().equals(approverEmail)) {
+            throw new IllegalArgumentException("तुम्ही दुसऱ्या कोणाची अप्रूव्हल रिक्वेस्ट प्रोसेस करू शकत नाही!");
+        }
+
         approval.setStatus(DocumentStatus.valueOf(request.getStatus()));
         approval.setComments(request.getComments());
         approval.setActionDate(LocalDateTime.now());
@@ -73,18 +79,18 @@ public class ApprovalService {
         return approvalRepository.save(approval);
     }
 
-    public List<Approval> getPendingApprovalsByApprover(String approverEmail) {
-        User approver = userRepository.findByEmail(approverEmail)
-                .orElseThrow(() -> new ResourceNotFoundException("Approver not found with email: " + approverEmail));
+	public Object getPendingApprovalsByApprover(String username) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-        return approvalRepository.findByApprover(approver).stream()
-                .filter(a -> a.getStatus() == DocumentStatus.PENDING)
-                .toList();
-    }
+	public Object getApprovalHistoryForDocument(Long documentId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 
-    public List<Approval> getApprovalHistoryForDocument(Long documentId) {
-        Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Document not found with id: " + documentId));
-        return approvalRepository.findByDocument(document);
-    }
+	public void processApproval(Long id, String username) {
+		// TODO Auto-generated method stub
+		
+	}
 }

@@ -12,9 +12,10 @@ import { Notification } from '../../models/notification';
   styleUrl: './notification.css',
 })
 export class NotificationComponent {
-  notifications: Notification[] = [];
+  notificationsList: Notification[] = [];
   isLoading = true;
   unreadCount = 0;
+  notifications!: Notification[];
 
   constructor(
     private notificationService: NotificationService,

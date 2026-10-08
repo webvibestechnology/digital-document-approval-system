@@ -1,48 +1,79 @@
 package com.documentapproval.controller;
 
-import java.util.LinkedHashMap;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
+
+import java.security.Key;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+@Service
+public class AuthController {
 
-import com.documentapproval.dto.LoginRequest;
-import com.documentapproval.dto.UserRequest;
+    @Value("${jwt.secret}")
+    private String secret;
 
-import jakarta.validation.Valid;
+    @Value("${jwt.expiration}")
+    private long expiration;
 
-    @CrossOrigin(origins = "http://localhost:4200") 
-    @RestController
-    @RequestMapping("/api/auth") 
-    public class AuthController {
-       
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser1(@Valid @RequestBody LoginRequest loginRequest) {
-    	return ResponseEntity.ok("Login Successful");
-    }
-    @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest request) {
-        
-        // १. तुमचा सध्याचा लॉगिन व्हेरिफिकेशनचा कोड इथे असेल (उदा. authenticationManager.authenticate...)
-        // ...
-        
-        // २. रिस्पॉन्स पाठवताना साध्या टेक्स्ट ऐवजी असा JSON मॅप तयार करा:
-        Map<String, String> response = new LinkedHashMap<>();
-        ((Object) response).add("message", "Login Successful");
-        // जर तुम्ही JWT टोकन पाठवत असाल तर: response.put("token", jwtToken);
-
-        return ResponseEntity.ok(response); // साध्या स्ट्रिंग ऐवजी मॅप रिटर्न करा
+    // १. युझरचा ईमेल आयडी घेऊन टोकन बनवणे
+    public String generateToken(String username) {
+        Map<String, Object> claims = new HashMap<>();
+        return createToken(claims, username);
     }
 
+    private String createToken(Map<String, Object> claims, String subject) {
+        return Jwts.builder()
+                .setClaims(claims)
+                .setSubject(subject)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
 
-    @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@Valid @RequestBody UserRequest registerRequest) {
-    	return ResponseEntity.ok("Registration Successful");
+    // २. टोकनमधून युझरनेम (ईमेल) बाहेर काढणे
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    // ३. टोकन एक्स्पायर झाला आहे का ते तपासणे
+    public Boolean isTokenValid(String token, UserDetails userDetails) {
+        final String username = extractUsername(token);
+        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
+    }
+
+    private Boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+
+    private Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    // ४. सिक्रेट की (Secret Key) तयार करणे
+    private Key getSigningKey() {
+        byte[] keyBytes = secret.getBytes();
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }
-    
-    

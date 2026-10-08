@@ -1,7 +1,5 @@
 package com.documentapproval.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.documentapproval.dto.ApprovalRequest;
 import com.documentapproval.entity.Approval;
+import com.documentapproval.exception.BadRequestException;
 import com.documentapproval.services.ApprovalService;
 
 @RestController
@@ -32,6 +31,15 @@ public class ApprovalController {
         return ResponseEntity.ok(approvalService.submitForApproval(documentId, approverEmail));
     }
 
+    @PostMapping("/{id}/process")
+    public ResponseEntity<?> processDocumentApproval(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) 
+    { 
+        approvalService.processApproval(id, userDetails.getUsername()); 
+        
+        return ResponseEntity.ok("Approval processed successfully");
+    }
     @PostMapping("/process")
     public ResponseEntity<Approval> processApproval(
             @RequestBody ApprovalRequest request,
@@ -40,12 +48,20 @@ public class ApprovalController {
     }
 
     @GetMapping("/pending")
-    public ResponseEntity<List<Approval>> getPendingApprovals(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Object> getPendingApprovals(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(approvalService.getPendingApprovalsByApprover(userDetails.getUsername()));
     }
 
     @GetMapping("/document/{documentId}")
-    public ResponseEntity<List<Approval>> getApprovalHistory(@PathVariable Long documentId) {
+    public ResponseEntity<Object> getApprovalHistory(@PathVariable Long documentId) {
         return ResponseEntity.ok(approvalService.getApprovalHistoryForDocument(documentId));
     }
+    public void processApproval(Long approvalId, String loggedInUserEmail) {
+        Approval approval = new Approval();
+
+        if (!approval.getApprover().getEmail().equals(loggedInUserEmail)) {
+            throw new BadRequestException("Someone else tries to process an approval not assigned to them");
+        }
+    }
+
 }

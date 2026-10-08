@@ -61,3 +61,27 @@
   display: flex;
   gap: 6px;
 }
+.error-text {
+  color: red;
+  font-size: 12px;
+  display: block;
+  margin-top: 5px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+.download-btn {
+  background-color: #2563eb; 
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 8px;
+}
+
+.download-btn:hover {
+  background-color: #1d4ed8; 
+}

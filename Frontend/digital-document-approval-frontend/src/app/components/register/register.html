@@ -1,17 +1,12 @@
-<div class="auth-page">
-  <div class="auth-left">
-    <div class="auth-brand">
-      <div class="brand-logo">📄</div>
-      <h1>Join DocApproval</h1>
-      <p>Create your account and start managing documents today</p>
-    </div>
-    <div class="auth-steps">
-      <div class="step"><span class="step-num">1</span><span>Create your account</span></div>
-      <div class="step"><span class="step-num">2</span><span>Upload documents for review</span></div>
-      <div class="step"><span class="step-num">3</span><span>Track approvals in real time</span></div>
-    </div>
+<div class="auth-container">
+  
+  <div class="auth-steps">
+    <div class="step"><span class="step-num">1</span><span>Create your account</span></div>
+    <div class="step"><span class="step-num">2</span><span>Upload documents</span></div>
+    <div class="step"><span class="step-num">3</span><span>Track approvals</span></div>
   </div>
 
+  
   <div class="auth-right">
     <div class="auth-card">
       <h2>Create account</h2>
@@ -19,51 +14,126 @@
 
       <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
       <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+      <!-- जर errorMessage मध्ये काही मजकूर असेल, तरच हा बॉक्स स्क्रीनवर दिसेल -->
+<div *ngIf="errorMessage" class="alert alert-danger mt-2" role="alert">
+  {{ errorMessage }}
+</div>
 
-      <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
-  
-
+<form #myForm="ngForm">
   <div class="form-group">
-    <label for="username">Username</label>
-    <input type="text" id="username" [(ngModel)]="username" name="username"
-           required placeholder="Your display name" #usernameInput="ngModel">
-    <span class="error-text" *ngIf="usernameInput.invalid && usernameInput.touched" style="color: red; font-size: 12px; display: block; margin-top: 5px;">Username is required</span>
+    <label for="title">Title (शीर्षक):</label>
+    
+    <input 
+      type="text" 
+      id="title" 
+      name="title" 
+      ngModel 
+      required 
+      #titleInput="ngModel" 
+      class="form-control">
+
+    <span class="error-text" *ngIf="titleInput.invalid && titleInput.touched">
+      Title is required (शीर्षक भरणे आवश्यक आहे).
+    </span>
   </div>
 
-  <div class="form-group">
-    <label for="email">Email address</label>
-    <input type="email" id="email" [(ngModel)]="email" name="email"
-           required email placeholder="you@example.com" #emailInput="ngModel">
-    <span class="error-text" *ngIf="emailInput.invalid && emailInput.touched" style="color: red; font-size: 12px; display: block; margin-top: 5px;">Invalid email format</span>
-  </div>
- 
-  <div class="form-group">
-    <label for="password">Password</label>
-    <input type="password" id="password" [(ngModel)]="password" name="password"
-           required placeholder="At least 8 characters" #passwordInput="ngModel">
-    <span class="error-text" *ngIf="passwordInput.invalid && passwordInput.touched" style="color: red; font-size: 12px; display: block; margin-top: 5px;">Password is required</span>
-  </div>
-
+  <br><br>
 
   <div class="form-group">
-    <label for="confirmPassword">Confirm password</label>
-    <input type="password" id="confirmPassword" [(ngModel)]="confirmPassword" name="confirmPassword"
-           required placeholder="Repeat your password" #confirmPasswordInput="ngModel">
-    <span class="error-text" *ngIf="confirmPasswordInput.invalid && confirmPasswordInput.touched" style="color: red; font-size: 12px; display: block; margin-top: 5px;">Please confirm your password</span>
+    <label for="email">Email (ईमेल):</label>
+    <input 
+      type="email" 
+      id="email" 
+      name="email" 
+      ngModel 
+      required 
+      email 
+      #emailInput="ngModel" 
+      class="form-control">
+
+    <span class="error-text" *ngIf="emailInput.errors?.['email'] && emailInput.touched">
+      Invalid email format (कृपया योग्य ईमेल आयडी टाका).
+    </span>
   </div>
-
-
-  <button type="submit" [disabled]="registerForm.invalid || isLoading" class="btn btn-primary" style="margin-top: 15px;">
-    {{ isLoading ? 'Registering...' : 'Register' }}
-  </button>
 
 </form>
+
+
+      <form (ngSubmit)="onSubmit()" #registerForm="ngForm">
+        
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" [(ngModel)]="registerData.username" name="username"
+                 required placeholder="Your display name" #usernameInput="ngModel">
+          <span class="error-text" *ngIf="usernameInput.invalid && usernameInput.touched" style="color: red;">
+            Username is required
+          </span>
+        </div>
+
+        
+        <div class="form-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" [(ngModel)]="registerData.email" name="email"
+                 required email placeholder="Enter your email" #emailInput="ngModel">
+          <span class="error-text" *ngIf="emailInput.invalid && emailInput.touched" style="color: red;">
+            Please enter a valid email address
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="roleName">Select Role</label>
+          <select id="roleName" [(ngModel)]="registerData.roleName" name="roleName" required #roleInput="ngModel">
+            <option value="" disabled selected>Choose your role</option>
+            <option value="USER">User</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+          <span class="error-text" *ngIf="roleInput.invalid && roleInput.touched" style="color: red;">
+            Role is required
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="departmentName">Select Department</label>
+          <select id="departmentName" [(ngModel)]="registerData.departmentName" name="departmentName" required #departmentInput="ngModel">
+            <option value="" disabled selected>Choose your department</option>
+            <option value="HR">Human Resources</option>
+            <option value="IT">Information Technology</option>
+            <option value="Finance">Finance</option>
+          </select>
+          <span class="error-text" *ngIf="departmentInput.invalid && departmentInput.touched" style="color: red;">
+            Department is required
+          </span>
+        </div>
+        
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" [(ngModel)]="registerData.password" name="password"
+                 required placeholder="Enter your password" #passwordInput="ngModel">
+          <span class="error-text" *ngIf="passwordInput.invalid && passwordInput.touched" style="color: red;">
+            Password is required
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" [(ngModel)]="registerData.confirmPassword" name="confirmPassword"
+                 required placeholder="Repeat your password" #confirmPasswordInput="ngModel">
+          <span class="error-text" *ngIf="confirmPasswordInput.invalid && confirmPasswordInput.touched" style="color: red;">
+            Please repeat your password
+          </span>
+        </div>
+
+        <button type="submit" [disabled]="registerForm.invalid || isLoading" class="btn btn-primary" style="margin-top: 15px;">
+          {{ isLoading ? 'Registering...' : 'Register' }}
         </button>
+
+        <p class="auth-switch">
+          Already have an account? <a routerLink="/login">Sign in here</a>
+        </p>
+
       </form>
 
-      <p class="auth-switch">
-        Already have an account? <a routerLink="/login">Sign in here</a>
-      </p>
     </div>
   </div>
 </div>

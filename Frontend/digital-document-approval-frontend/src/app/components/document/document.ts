@@ -1,72 +1,57 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, NgForm } from '@angular/forms';
 import { DocumentService } from '../../services/document';
 import { AuthService } from '../../services/auth';
 import { Document } from '../../models/document';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
-
+import { HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-document',
   standalone: true,
-    imports: [CommonModule, FormsModule, HttpClientModule],
+  imports: [CommonModule, FormsModule, HttpClientModule],
   templateUrl: './document.html',
   styleUrl: './document.css',
 })
-export class DocumentComponent {
+export class DocumentComponent implements OnInit {
   documents: Document[] = [];
   showUploadForm = false;
-  isLoading = true;
-  isUploading = false;
+  isLoading = true;       
+  isUploading = false;    
   title = '';
   description = '';
   selectedFile: File | null = null;
   errorMessage = '';
   successMessage = '';
 
-    constructor(
-    private documentService: DocumentService,
-    private authService: AuthService,
-    private http: HttpClient
+  constructor(
+    public documentService: DocumentService,
+    public authService: AuthService
   ) {}
-  downloadFile(documentId: number) {
-    const token = localStorage.getItem('token'); 
-    
-    this.http.get(`http://localhost:8080/api/documents/${documentId}/download`, {
-      headers: { 'Authorization': `Bearer ${token}` },
-      responseType: 'blob' 
-    }).subscribe((response: Blob) => {
-      const blob = new Blob([response], { type: response.type });
-      const url = window.URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = url;
-      anchor.download = 'downloaded_file.pdf'; 
-      anchor.click();
-    }, error => {
-      console.error('Download failed', error);
-    });
-  }
 
   ngOnInit() {
     this.loadDocuments();
   }
 
-  loadDocuments() {
+  loadDocuments(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    
     const userRole = this.authService.getUserRole();
     const serviceMethod = userRole === 'ADMIN' 
       ? this.documentService.getAllDocuments() 
       : this.documentService.getMyDocuments();
 
     serviceMethod.subscribe({
-      next: (docs) => {
+      next: (docs: Document[]) => {
         this.documents = docs;
         this.isLoading = false;
       },
-      error: () => {
-        this.isLoading = false;
+      error: (err) => {
+        console.error("Failed to load documents:", err);
+        this.errorMessage = 'Failed to load documents.';
+        this.isLoading = false; 
+        this.documents = []; 
       }
     });
   }
@@ -88,19 +73,30 @@ export class DocumentComponent {
     this.errorMessage = '';
     this.successMessage = '';
 
-    this.documentService.uploadDocument(this.title, this.description, this.selectedFile).subscribe({
+    const formData = new FormData();
+    formData.append('title', this.title);
+    formData.append('description', this.description);
+    formData.append('file', this.selectedFile);
+
+    this.documentService.uploadDocument(
+      this.title,
+      this.description,
+      this.selectedFile,
+      undefined as never
+    ).subscribe({
       next: () => {
         this.successMessage = 'Document uploaded successfully!';
         this.title = '';
         this.description = '';
         this.selectedFile = null;
         this.showUploadForm = false;
-        this.loadDocuments();
-        this.isUploading = false;
+        this.loadDocuments(); 
+        this.isUploading = false; 
       },
       error: (err) => {
-        this.errorMessage = err.error?.error || 'Upload failed';
-        this.isUploading = false;
+        console.error('Upload failed:', err);
+        this.errorMessage = err.error?.message || 'Upload failed';
+        this.isUploading = false; 
       }
     });
   }
@@ -119,7 +115,9 @@ export class DocumentComponent {
     });
   }
 
+
   downloadDocument(id: number) {
     this.documentService.downloadDocument(id);
   }
 }
+

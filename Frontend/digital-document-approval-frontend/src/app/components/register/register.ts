@@ -1,9 +1,8 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../services/auth';
-import { Router } from '@angular/router';
 import { RegisterRequest } from '../../models/user';
 
 @Component({
@@ -14,11 +13,15 @@ import { RegisterRequest } from '../../models/user';
   styleUrl: './register.css',
 })
 export class RegisterComponent {
-  username = '';
-  email = '';
-  password = '';
-  confirmPassword = '';
-  roleName = 'USER';
+  registerData = {
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    roleName: 'USER',
+    departmentName:''
+  };
+
   errorMessage = '';
   successMessage = '';
   isLoading = false;
@@ -26,28 +29,34 @@ export class RegisterComponent {
   constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit() {
-    if (this.password !== this.confirmPassword) {
+    if (this.registerData.password !== this.registerData.confirmPassword) {
       this.errorMessage = 'Passwords do not match!';
       return;
     }
 
-    const data: RegisterRequest = {
-      username: this.username,
-      email: this.email,
-      password: this.password,
-      roleName: this.roleName
-    };
-
     this.isLoading = true;
     this.errorMessage = '';
+
+    const data: RegisterRequest = {
+      username: this.registerData.username,
+      email: this.registerData.email,
+      password: this.registerData.password,
+      roleName: this.registerData.roleName
+    };
+
+    console.log('Sending data to backend:', data);
 
     this.authService.register(data).subscribe({
       next: () => {
         this.successMessage = 'Registration successful! Please login.';
+        this.isLoading = false;
         setTimeout(() => this.router.navigate(['/login']), 2000);
       },
-      error: (err) => {
-        this.errorMessage = err.error?.error || 'Registration failed. Please try again.';
+      error: (err: any) => {
+        this.errorMessage = err?.error?.error || 'Registration failed. Please try again.';
+        this.isLoading = false;
+      },
+      complete: () => {
         this.isLoading = false;
       }
     });

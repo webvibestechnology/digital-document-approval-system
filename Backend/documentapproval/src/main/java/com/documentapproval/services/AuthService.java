@@ -2,6 +2,7 @@ package com.documentapproval.services;
 
 import com.documentapproval.dto.LoginRequest;
 import com.documentapproval.dto.RegisterRequest;
+import com.documentapproval.dto.UserRequest;
 import com.documentapproval.entity.Department;
 import com.documentapproval.entity.Role;
 import com.documentapproval.entity.User;
@@ -12,6 +13,9 @@ import com.documentapproval.repository.RoleRepository;
 import com.documentapproval.repository.UserRepository;
 import com.documentapproval.security.CustomUserDetailsService;
 import com.documentapproval.security.JwtService;
+
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,13 +30,13 @@ import java.util.Optional;
 @Service
 public class AuthService {
 
-    @Autowired private UserRepository userRepository;
+    @Autowired private static UserRepository userRepository;
     @Autowired private RoleRepository roleRepository;
     @Autowired private DepartmentRepository departmentRepository;
     @Autowired private PasswordEncoder passwordEncoder;
-    @Autowired private JwtService jwtService;
-    @Autowired private AuthenticationManager authManager;
-    @Autowired private CustomUserDetailsService userDetailsService;
+    @Autowired private static JwtService jwtService;
+    @Autowired private static AuthenticationManager authManager;
+    @Autowired private static CustomUserDetailsService userDetailsService;
 
     public Map<String, String> register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -62,14 +66,14 @@ public class AuthService {
         return Map.of("message", "Registration successful!");
     }
 
-    public Map<String, String> login(LoginRequest request) {
+    public static Map<String, String> login(LoginRequest request) {
         // This throws BadCredentialsException if wrong — handled by GlobalExceptionHandler
         authManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        UserDetails userDetails = userDetailsService.loadUserByUsername(request.getEmail());
-        String token = jwtService.generateToken(userDetails);
+        UserDetails userDetails = getUserDetailsService().loadUserByUsername(request.getEmail());
+        String token = getJwtService().generateToken(userDetails);
 
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -83,4 +87,25 @@ public class AuthService {
                 "username", username
         );
     }
+
+	private static JwtService getJwtService() {
+		return jwtService;
+	}
+
+	public static CustomUserDetailsService getUserDetailsService() {
+		return userDetailsService;
+	}
+
+	public void setUserDetailsService(CustomUserDetailsService userDetailsService) {
+		AuthService.userDetailsService = userDetailsService;
+	}
+
+	public void setJwtService(JwtService jwtService) {
+		AuthService.jwtService = jwtService;
+	}
+
+	public static Object Register(@Valid UserRequest registerRequest) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

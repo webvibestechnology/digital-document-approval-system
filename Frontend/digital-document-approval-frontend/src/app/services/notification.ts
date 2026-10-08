@@ -23,3 +23,5 @@ export class NotificationService {
     return this.http.put(`${this.apiUrl}/read-all`, null);
   }
 }
+
+export type { Notification };

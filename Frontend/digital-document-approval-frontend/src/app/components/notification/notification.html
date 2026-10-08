@@ -23,6 +23,18 @@
       <p class="notif-message">{{ n.message }}</p>
       <small class="notif-time">{{ (n.createdAt | slice:0:16)?.replace('T', ' ') }}</small>
     </div>
+    <div *ngIf="notifications.length > 0">
+  <div *ngFor="let notif of notificationsList">
+    <p>{{ notif.message }}</p>
+  </div>
+</div>
+
+<!-- नवीन दुरुस्त केलेला कोड: -->
+<div class="empty-state" *ngIf="notifications.length === 0">
+
+  <p>You're all caught up! No new notification.</p>
+</div>
+
     <button *ngIf="!n.isRead" (click)="markRead(n.id)"
             class="btn btn-outline btn-small">
       Mark read

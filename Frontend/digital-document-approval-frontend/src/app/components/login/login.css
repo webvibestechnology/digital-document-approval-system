@@ -155,3 +155,21 @@
   .auth-left { display: none; }
   .auth-right { width: 100%; background: #fff; padding: 40px 28px; }
 }
+
+.error-text {
+  color: #dc3545;          
+  font-size: 0.85rem;      
+  font-weight: 500;        
+  display: block;          
+  margin-top: 5px;         
+  font-family: sans-serif; 
+}
+
+input.ng-invalid.ng-touched {
+  border: 1px solid #dc3545;  
+  background-color: #fff8f8; 
+}
+
+input.ng-valid.ng-touched {
+  border: 1px solid #28a745;  
+}

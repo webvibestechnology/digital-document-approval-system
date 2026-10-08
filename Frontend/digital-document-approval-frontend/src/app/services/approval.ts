@@ -20,9 +20,12 @@ export class ApprovalService {
   }
 
   submitForApproval(documentId: number, approverEmail: string): Observable<Approval> {
-    const params = new HttpParams()
-      .set('documentId', documentId.toString())
-      .set('approverEmail', approverEmail);
-    return this.http.post<Approval>(`${this.apiUrl}/submit`, null, { params });
-  }
+  const approvalPayload = {
+    documentId: documentId,
+    approverEmail: approverEmail
+  };
+  
+  return this.http.post<Approval>(`${this.apiUrl}/submit`, approvalPayload);
+}
+
 }

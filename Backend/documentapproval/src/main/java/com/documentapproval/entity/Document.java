@@ -1,13 +1,7 @@
 package com.documentapproval.entity;
 
-import java.time.LocalDateTime;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,6 +10,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Table(name = "documents")
@@ -33,8 +29,7 @@ public class Document {
     @Column(name = "file_type")
     private String fileType;
 
-    @Enumerated(EnumType.STRING)
-    private DocumentStatus status;
+    private String status; // तुमच्या प्रोजेक्टनुसार प्रकार (String किंवा DocumentStatus) पहा
 
     @ManyToOne
     @JoinColumn(name = "uploaded_by")
@@ -55,30 +50,29 @@ public class Document {
     @PreUpdate
     protected void onUpdate() { updatedAt = LocalDateTime.now(); }
 
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
-
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-
     public String getFilePath() { return filePath; }
     public void setFilePath(String filePath) { this.filePath = filePath; }
-
     public String getFileType() { return fileType; }
     public void setFileType(String fileType) { this.fileType = fileType; }
-
-    public DocumentStatus getStatus() { return status; }
-    public void setStatus(DocumentStatus status) { this.status = status; }
-
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
     public User getUploadedBy() { return uploadedBy; }
     public void setUploadedBy(User uploadedBy) { this.uploadedBy = uploadedBy; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+	public void setStatus(DocumentStatus pending) {
+		// TODO Auto-generated method stub
+		
+	}
 
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+	public Object getCreatedAt() {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

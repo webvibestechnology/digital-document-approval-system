@@ -7,17 +7,24 @@ import { AuthResponse, LoginRequest, RegisterRequest } from '../models/user';
   providedIn: 'root',
 })
 export class AuthService {
+ getUserId(): number {
+  const userId = localStorage.getItem('userId');
+  return userId ? parseInt(userId, 10) : 0;
+}
+
   getUserEmail(): any {
     throw new Error('Method not implemented.');
   }
   private apiUrl = 'http://localhost:8080/api/auth';
 
   constructor(private http: HttpClient) {}
-
-  login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, { email, password });
+  login(loginData: LoginRequest): Observable<any> {
+    // responseType: 'text' काढून टाकले आहे जेणेकरून अँगुलरला डायरेक्ट JSON डेटा मिळेल
+    return this.http.post<any>(`${this.apiUrl}/login`, loginData, {
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
-
+  
   register(data: RegisterRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, data);
   }

@@ -1,7 +1,13 @@
 package com.documentapproval.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+
 public class LoginRequest {
-    private String email;
+	@NotBlank(message="Email is required")
+	@Email(message="Invalid email format")
+	private String email;
+    @NotBlank(message="Password is required")
     private String password;
 
     public String getEmail() { return email; }
@@ -10,3 +16,10 @@ public class LoginRequest {
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
 }
+
+
+
+
+
+
+

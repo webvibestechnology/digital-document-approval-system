@@ -1,6 +1,10 @@
 package com.documentapproval.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class DocumentRequest {
+
+    @NotBlank(message = "Document title is required")
     private String title;
     private String description;
 

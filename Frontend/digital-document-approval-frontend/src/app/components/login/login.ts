@@ -1,36 +1,54 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
-import { AuthService } from '../../services/auth';
-import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth'; // तुमचा पाथ यानुसार तपासून घ्या
 
 @Component({
   selector: 'app-login',
-  standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
   templateUrl: './login.html',
-  styleUrl: './login.css',
+  styleUrls: ['./login.css'],
+  standalone: true,
+  imports: [FormsModule, CommonModule, RouterModule] // 👈 इथून AuthService काढून टाकला आहे!
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   email = '';
   password = '';
   errorMessage = '';
   isLoading = false;
 
-  constructor(private authService: AuthService, private router: Router) {}
+  constructor(private authService: AuthService, private router: Router) { }
 
-  onSubmit() {
+  ngOnInit(): void {
+    if (this.authService.getToken()) {
+      this.router.navigate(['/dashboard']);
+    }
+  }
+
+  onLogin(): void {
+    if (!this.email || !this.password) {
+      this.errorMessage = 'Please enter both email and password.';
+      return;
+    }
+
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.authService.login(this.email, this.password).subscribe({
+    this.authService.login({ email: this.email, password: this.password }).subscribe({
       next: (res) => {
-        this.authService.saveToken(res.token, res.role, res.username);
-        this.router.navigate(['/dashboard']);
+        console.log('Login Response:', res);
+        
+        if (res && res.token) {
+          this.authService.saveToken(res.token, res.role, res.username);
+          this.router.navigate(['/dashboard']);
+        } else {
+          this.errorMessage = 'Invalid token received from server.';
+        }
+        this.isLoading = false;
       },
       error: (err) => {
-        this.errorMessage = 'Invalid email or password. Please try again.';
+        console.error('Login Error:', err);
+        this.errorMessage = 'Invalid email or password.';
         this.isLoading = false;
       }
     });

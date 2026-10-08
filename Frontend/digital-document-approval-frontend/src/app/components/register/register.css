@@ -1,151 +1,218 @@
-.auth-page {
+
+.auth-container {
   display: flex;
   min-height: 100vh;
-}
-
-.auth-left {
-  flex: 1;
-  background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 35%, #312e81 65%, #4338ca 100%);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 64px;
-  color: #fff;
-  position: relative;
-  overflow: hidden;
-}
-
-.auth-left::before {
-  content: '';
-  position: absolute;
-  top: -120px;
-  right: -120px;
-  width: 380px;
-  height: 380px;
-  border: 1.5px solid rgba(165,180,252,.12);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.brand-logo {
-  font-size: 3.2rem;
-  margin-bottom: 18px;
-  display: block;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,.3));
-}
-
-.auth-brand h1 {
-  font-size: 2.4rem;
-  font-weight: 800;
-  margin-bottom: 14px;
-  letter-spacing: -0.025em;
-  line-height: 1.15;
-}
-
-.auth-brand p {
-  font-size: 1.0rem;
-  color: rgba(255,255,255,0.65);
-  line-height: 1.7;
-  margin-bottom: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8fafc;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 .auth-steps {
+  flex: 1;
+  background: linear-gradient(135deg, #1e1b4b 0%, #1e3a8a 100%);
+  color: #ffffff;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin-top: 44px;
+  justify-content: center;
+  padding: 60px;
 }
 
-.step {
+.auth-steps .step {
   display: flex;
   align-items: center;
-  gap: 16px;
-  background: rgba(255,255,255,0.07);
-  backdrop-filter: blur(4px);
-  padding: 14px 18px;
+  margin-bottom: 30px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 15px 20px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.08);
-  transition: all 0.2s;
-}
-.step:hover {
-  background: rgba(255,255,255,0.11);
-  transform: translateX(4px);
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.step-num {
-  width: 30px;
-  height: 30px;
-  background: linear-gradient(135deg, rgba(165,180,252,.3), rgba(99,102,241,.3));
-  border: 1px solid rgba(165,180,252,.4);
+.auth-steps .step-num {
+  background-color: #10b981;
+  color: white;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 800;
-  font-size: 0.85rem;
-  flex-shrink: 0;
-  color: #c7d2fe;
+  font-weight: bold;
+  margin-right: 15px;
+  font-size: 14px;
 }
 
-.step span:last-child {
-  font-size: 0.9rem;
-  color: rgba(255,255,255,0.82);
+.auth-steps .step span:last-child {
+  font-size: 16px;
   font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 .auth-right {
-  width: 520px;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8fafc;
-  padding: 48px 44px;
-  overflow-y: auto;
+  padding: 40px;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 450px;
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
 }
 
 .auth-card h2 {
-  font-size: 1.9rem;
-  font-weight: 800;
-  color: #0f172a;
-  margin-bottom: 6px;
-  letter-spacing: -0.025em;
+  font-size: 28px;
+  color: #1e293b;
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-weight: 700;
 }
 
 .auth-subtitle {
   color: #64748b;
-  margin-bottom: 28px;
-  font-size: 0.95rem;
+  font-size: 15px;
+  margin-bottom: 30px;
 }
 
-.btn-full {
-  width: 100%;
-  justify-content: center;
-  padding: 12px;
-  font-size: 0.95rem;
+.form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 8px;
+}
+
+.form-group input,
+.form-group select {
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #3b82f6;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.error-text {
+  font-size: 12px;
   margin-top: 6px;
-  border-radius: 10px;
+  font-weight: 500;
+}
+
+
+.success-message,
+.orange-message,
+.error-message {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.success-message {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.error-message {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+  background-color: #3b82f6;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-primary:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
 }
 
 .auth-switch {
   text-align: center;
-  margin-top: 22px;
+  font-size: 14px;
   color: #64748b;
-  font-size: 0.875rem;
+  margin-top: 25px;
 }
 
 .auth-switch a {
-  color: #4f46e5;
-  font-weight: 700;
+  color: #3b82f6;
   text-decoration: none;
+  font-weight: 600;
 }
-.auth-switch a:hover { text-decoration: underline; }
 
-@media (max-width: 820px) {
-  .auth-left { display: none; }
-  .auth-right { width: 100%; background: #fff; padding: 40px 24px; }
+.auth-switch a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .auth-container {
+    flex-direction: column;
+  }
+  .auth-steps {
+    padding: 30px 20px;
+  }
+  .auth-right {
+    padding: 20px;
+  }
+  .auth-card {
+    padding: 25px;
+  }
+}
+/* १. एरर मेसेज लाल रंगात आणि ठळक दाखवण्यासाठी */
+.error-text {
+  color: #dc3545;          /* गडद लाल रंग (Bootstrap चा डेंजर कलर) */
+  font-size: 0.85rem;      /* अक्षराचा आकार थोडा लहान, जेणेकरून ते मेसेजसारखे वाटेल */
+  font-weight: 500;        /* अक्षरे थोडी ठळक (Medium bold) करण्यासाठी */
+  display: block;          /* मेसेज इनपुट बॉक्सच्या बरोबर खाली नवीन लाईनवर येण्यासाठी */
+  margin-top: 5px;         /* इनपुट बॉक्स आणि एरर मेसेजमध्ये थोडी जागा सोडण्यासाठी */
+  font-family: sans-serif; /* साधी आणि वाचायला सोपी फॉन्ट स्टाईल */
+}
+
+/* २. (ऐच्छिक) जर इनपुट फील्डमध्ये चूक असेल, तर बॉक्सची बॉर्डर लाल करण्यासाठी */
+input.ng-invalid.ng-touched {
+  border: 1px solid #dc3545;  /* बॉक्सची बॉर्डर लाल होईल */
+  background-color: #fff8f8; /* बॉक्सच्या आत फिकट लाल रंग येईल */
+}
+
+/* ३. (ऐच्छिक) युझरने योग्य माहिती भरल्यावर बॉक्सची बॉर्डर हिरवी करण्यासाठी */
+input.ng-valid.ng-touched {
+  border: 1px solid #28a745;  /* बॉक्सची बॉर्डर हिरवी होईल */
 }
